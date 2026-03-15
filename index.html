@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tweet Generator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --surface-2: #242424;
+      --surface-3: #2e2e2e;
+      --border: #333;
+      --border-light: #3f3f3f;
+      --text: #f0f0f0;
+      --text-muted: #888;
+      --text-dim: #555;
+      --accent: #1d9bf0;
+      --accent-hover: #1a8cd8;
+      --accent-dim: rgba(29, 155, 240, 0.12);
+      --accent-dim-hover: rgba(29, 155, 240, 0.2);
+      --success: #00ba7c;
+      --success-dim: rgba(0, 186, 124, 0.12);
+      --warning: #f4a419;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --radius-xs: 6px;
+    }
+
+    html { height: 100%; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+      min-height: 100%;
+    }
+
+    /* ─── Layout ─── */
+    .app {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      grid-template-rows: auto 1fr;
+      min-height: 100vh;
+    }
+
+    /* ─── Header ─── */
+    .header {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 28px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .header h1 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+
+    .header-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .api-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+      background: var(--surface-2);
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+
+    .api-status:hover { border-color: var(--border-light); }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+      flex-shrink: 0;
+    }
+
+    .status-dot.inactive { background: var(--text-dim); }
+
+    /* ─── Left Panel ─── */
+    .left-panel {
+      border-right: 1px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      overflow-y: auto;
+    }
+
+    .panel-section {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .panel-section:last-child { border-bottom: none; }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-dim);
+      margin-bottom: 12px;
+    }
+
+    /* ─── Textarea ─── */
+    textarea {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      line-height: 1.6;
+      padding: 14px;
+      resize: vertical;
+      min-height: 200px;
+      transition: border-color 0.15s;
+      outline: none;
+    }
+
+    textarea::placeholder { color: var(--text-dim); }
+    textarea:focus { border-color: var(--accent); }
+
+    .char-counter {
+      font-size: 11px;
+      color: var(--text-dim);
+      text-align: right;
+      margin-top: 6px;
+    }
+
+    /* ─── Tone Selector ─── */
+    .tone-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .tone-btn {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 13px;
+      padding: 10px 12px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .tone-btn:hover {
+      border-color: var(--border-light);
+      color: var(--text);
+    }
+
+    .tone-btn.active {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
+    .tone-name { font-weight: 500; }
+    .tone-desc { font-size: 11px; color: var(--text-dim); }
+    .tone-btn.active .tone-desc { color: var(--text-muted); }
+
+    /* ─── Count Slider ─── */
+    .count-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .count-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 4px;
+      background: var(--surface-3);
+      border-radius: 2px;
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+    .range-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 6px;
+    }
+
+    /* ─── Options ─── */
+    .option-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .option-row:last-child { border-bottom: none; }
+
+    .option-label {
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    .option-sub {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 1px;
+    }
+
+    .toggle {
+      position: relative;
+      width: 36px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    .toggle input { opacity: 0; width: 0; height: 0; }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: var(--surface-3);
+      border-radius: 20px;
+      transition: 0.2s;
+    }
+
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: 0.2s;
+    }
+
+    .toggle input:checked + .toggle-slider { background: var(--accent); }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(16px); }
+
+    /* ─── Generate Button ─── */
+    .generate-btn {
+      width: 100%;
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius-sm);
+      color: white;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      padding: 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      letter-spacing: -0.01em;
+    }
+
+    .generate-btn:hover:not(:disabled) { background: var(--accent-hover); }
+    .generate-btn:active:not(:disabled) { transform: scale(0.99); }
+
+    .generate-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── Right Panel ─── */
+    .right-panel {
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      background: var(--bg);
+    }
+
+    /* ─── Empty State ─── */
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 48px;
+      text-align: center;
+    }
+
+    .empty-icon {
+      width: 64px;
+      height: 64px;
+      background: var(--surface-2);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+    }
+
+    .empty-state h2 {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .empty-state p {
+      font-size: 14px;
+      color: var(--text-muted);
+      max-width: 320px;
+      line-height: 1.6;
+    }
+
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 8px;
+      text-align: left;
+    }
+
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .step-num {
+      width: 24px;
+      height: 24px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-dim);
+      flex-shrink: 0;
+    }
+
+    /* ─── Results ─── */
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 28px 16px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      z-index: 10;
+    }
+
+    .results-meta {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .results-meta strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .results-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-sm {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xs);
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 12px;
+      padding: 6px 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-sm:hover {
+      border-color: var(--border-light);
+      color: var(--text);
+    }
+
+    .tweets-grid {
+      padding: 20px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* ─── Tweet Card ─── */
+    .tweet-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      transition: border-color 0.15s;
+      position: relative;
+    }
+
+    .tweet-card:hover { border-color: var(--border-light); }
+
+    .tweet-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .tweet-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+    }
+
+    .tweet-actions { display: flex; gap: 6px; }
+
+    .copy-btn {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xs);
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 5px 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .copy-btn:hover {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .copy-btn.copied {
+      background: var(--success-dim);
+      border-color: var(--success);
+      color: var(--success);
+    }
+
+    .tweet-text {
+      font-size: 15px;
+      line-height: 1.6;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .tweet-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .char-count {
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    .char-count.warning { color: var(--warning); }
+    .char-count.over { color: #f4533e; }
+
+    .char-bar {
+      width: 80px;
+      height: 3px;
+      background: var(--surface-3);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .char-bar-fill {
+      height: 100%;
+      background: var(--success);
+      border-radius: 2px;
+      transition: width 0.2s;
+    }
+
+    .char-bar-fill.warning { background: var(--warning); }
+    .char-bar-fill.over { background: #f4533e; }
+
+    /* ─── Loading State ─── */
+    .loading-state {
+      padding: 40px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .skeleton-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .skeleton {
+      background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 50%, var(--surface-2) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 4px;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ─── Error State ─── */
+    .error-banner {
+      margin: 20px 28px;
+      background: rgba(244, 83, 62, 0.1);
+      border: 1px solid rgba(244, 83, 62, 0.3);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      font-size: 13px;
+      color: #f4533e;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    /* ─── API Key Modal ─── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius);
+      padding: 28px;
+      width: 420px;
+      max-width: 90vw;
+    }
+
+    .modal h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .modal p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    .input-group { margin-bottom: 16px; }
+
+    .input-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .input-field {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: monospace;
+      font-size: 13px;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .input-field:focus { border-color: var(--accent); }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius-sm);
+      color: white;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 10px 20px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-primary:hover { background: var(--accent-hover); }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 14px;
+      padding: 10px 20px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-ghost:hover { border-color: var(--border-light); color: var(--text); }
+
+    /* ─── Scrollbar ─── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--border); }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ─── Header ─── -->
+  <header class="header">
+    <div class="header-brand">
+      <div class="header-icon">𝕏</div>
+      <div>
+        <h1>Tweet Generator</h1>
+        <div class="header-subtitle">Turn blog articles into Twitter posts</div>
+      </div>
+    </div>
+    <button class="api-status" onclick="openModal()" id="apiStatusBtn">
+      <span class="status-dot inactive" id="statusDot"></span>
+      <span id="apiStatusText">API key not set</span>
+    </button>
+  </header>
+
+  <!-- ─── Left Panel ─── -->
+  <aside class="left-panel">
+
+    <!-- Article Input -->
+    <div class="panel-section">
+      <div class="section-label">Blog Article</div>
+      <textarea id="articleInput" placeholder="Paste your blog article content here…" oninput="updateArticleCounter(this)"></textarea>
+      <div class="char-counter" id="articleCounter">0 words</div>
+    </div>
+
+    <!-- Tone -->
+    <div class="panel-section">
+      <div class="section-label">Tone</div>
+      <div class="tone-grid">
+        <button class="tone-btn active" data-tone="insightful" onclick="selectTone(this)">
+          <span class="tone-name">💡 Insightful</span>
+          <span class="tone-desc">Thoughtful & informative</span>
+        </button>
+        <button class="tone-btn" data-tone="casual" onclick="selectTone(this)">
+          <span class="tone-name">😊 Casual</span>
+          <span class="tone-desc">Friendly & conversational</span>
+        </button>
+        <button class="tone-btn" data-tone="punchy" onclick="selectTone(this)">
+          <span class="tone-name">⚡ Punchy</span>
+          <span class="tone-desc">Bold & attention-grabbing</span>
+        </button>
+        <button class="tone-btn" data-tone="storytelling" onclick="selectTone(this)">
+          <span class="tone-name">📖 Story</span>
+          <span class="tone-desc">Narrative & engaging</span>
+        </button>
+        <button class="tone-btn" data-tone="educational" onclick="selectTone(this)">
+          <span class="tone-name">🎓 Educational</span>
+          <span class="tone-desc">Clear & instructive</span>
+        </button>
+        <button class="tone-btn" data-tone="contrarian" onclick="selectTone(this)">
+          <span class="tone-name">🔥 Hot take</span>
+          <span class="tone-desc">Bold opinion / debate</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Count -->
+    <div class="panel-section">
+      <div class="section-label">Number of tweets</div>
+      <div class="count-row">
+        <span>Generate</span>
+        <span class="count-value" id="countDisplay">7</span>
+      </div>
+      <input type="range" min="3" max="10" value="7" id="countSlider" oninput="document.getElementById('countDisplay').textContent = this.value" />
+      <div class="range-labels"><span>3</span><span>10</span></div>
+    </div>
+
+    <!-- Options -->
+    <div class="panel-section">
+      <div class="section-label">Options</div>
+      <div class="option-row">
+        <div>
+          <div class="option-label">Include emojis</div>
+          <div class="option-sub">Add relevant emojis to posts</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="optEmoji" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="option-row">
+        <div>
+          <div class="option-label">Include hashtags</div>
+          <div class="option-sub">Add 1–2 relevant hashtags</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="optHashtags" />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="option-row">
+        <div>
+          <div class="option-label">Add a CTA</div>
+          <div class="option-sub">End with a call to action</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="optCTA" />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Generate Button -->
+    <div class="panel-section">
+      <button class="generate-btn" id="generateBtn" onclick="generateTweets()">
+        <div class="spinner" id="spinner"></div>
+        <span id="generateBtnText">✦ Generate tweets</span>
+      </button>
+    </div>
+
+  </aside>
+
+  <!-- ─── Right Panel ─── -->
+  <main class="right-panel" id="rightPanel">
+
+    <!-- Empty State -->
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">✦</div>
+      <h2>Ready when you are</h2>
+      <p>Paste a blog article on the left and click Generate — Claude will create tweet variations for you instantly.</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <span>Set your API key (click the button in the top right)</span>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <span>Paste your blog article content</span>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <span>Choose a tone and click Generate</span>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+</div>
+
+<!-- ─── API Key Modal ─── -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOnBackdrop(event)">
+  <div class="modal">
+    <h2>Claude API Key</h2>
+    <p>Your key is saved in this browser only and never sent anywhere except Anthropic's servers. You can get a key at <strong>console.anthropic.com</strong>.</p>
+    <div class="input-group">
+      <label class="input-label" for="apiKeyInput">API Key</label>
+      <input class="input-field" type="password" id="apiKeyInput" placeholder="sk-ant-api03-…" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveApiKey()">Save key</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ─── State ───────────────────────────────────────────────────────────────
+  let apiKey = localStorage.getItem('tweet_gen_api_key') || '';
+  let selectedTone = 'insightful';
+  let currentResults = [];
+
+  // ─── Init ─────────────────────────────────────────────────────────────────
+  window.onload = () => {
+    // Pre-fill the stored API key
+    if (apiKey) {
+      updateApiStatus(true);
+    }
+    document.getElementById('apiKeyInput').value = apiKey;
+  };
+
+  // ─── API Key Modal ────────────────────────────────────────────────────────
+  function openModal() {
+    document.getElementById('apiKeyInput').value = apiKey;
+    document.getElementById('modalOverlay').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+
+  function closeModalOnBackdrop(e) {
+    if (e.target === document.getElementById('modalOverlay')) closeModal();
+  }
+
+  function saveApiKey() {
+    const val = document.getElementById('apiKeyInput').value.trim();
+    if (!val) return;
+    apiKey = val;
+    localStorage.setItem('tweet_gen_api_key', val);
+    updateApiStatus(true);
+    closeModal();
+  }
+
+  function updateApiStatus(active) {
+    const dot = document.getElementById('statusDot');
+    const text = document.getElementById('apiStatusText');
+    if (active) {
+      dot.classList.remove('inactive');
+      text.textContent = 'API key set ✓';
+    } else {
+      dot.classList.add('inactive');
+      text.textContent = 'API key not set';
+    }
+  }
+
+  // ─── UI Helpers ───────────────────────────────────────────────────────────
+  function selectTone(btn) {
+    document.querySelectorAll('.tone-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedTone = btn.dataset.tone;
+  }
+
+  function updateArticleCounter(el) {
+    const words = el.value.trim().split(/\s+/).filter(Boolean).length;
+    document.getElementById('articleCounter').textContent = words.toLocaleString() + ' words';
+  }
+
+  // ─── Generate ─────────────────────────────────────────────────────────────
+  async function generateTweets() {
+    const article = document.getElementById('articleInput').value.trim();
+    const count = document.getElementById('countSlider').value;
+    const useEmoji = document.getElementById('optEmoji').checked;
+    const useHashtags = document.getElementById('optHashtags').checked;
+    const useCTA = document.getElementById('optCTA').checked;
+
+    if (!apiKey) { openModal(); return; }
+    if (!article) {
+      showError('Please paste a blog article before generating.');
+      return;
+    }
+    if (article.split(/\s+/).length < 50) {
+      showError('Article seems too short. Paste more content for better results.');
+      return;
+    }
+
+    setLoading(true, parseInt(count));
+
+    const toneDescriptions = {
+      insightful: 'thoughtful, informative, and offers genuine insight — like a smart professional sharing what they learned',
+      casual: 'friendly, conversational, and approachable — like a friend texting you something interesting',
+      punchy: 'bold, short, and attention-grabbing — like a strong hook that stops you from scrolling',
+      storytelling: 'narrative and engaging — draws the reader in with a mini-story or personal angle',
+      educational: 'clear, structured, and instructive — like explaining something valuable step by step',
+      contrarian: 'a bold or slightly provocative opinion that challenges assumptions and sparks debate'
+    };
+
+    const emojiInstruction = useEmoji
+      ? 'Use 1–2 relevant emojis naturally within the text.'
+      : 'Do NOT use any emojis.';
+
+    const hashtagInstruction = useHashtags
+      ? 'Add 1–2 relevant hashtags at the end.'
+      : 'Do NOT add any hashtags.';
+
+    const ctaInstruction = useCTA
+      ? 'End with a short, natural call to action (e.g. "Read the full article", "Drop your thoughts below", etc.).'
+      : 'Do NOT include a call to action.';
+
+    const prompt = `You are an expert social media copywriter. Your job is to turn a blog article into compelling Twitter/X posts.
+
+Generate exactly ${count} tweet variations based on the article below.
+
+TONE: Each tweet should feel ${toneDescriptions[selectedTone]}.
+
+RULES:
+- Each tweet must be under 280 characters (hard limit)
+- Vary the angle, hook, and structure of each tweet — don't repeat the same idea
+- Write naturally, not like a robot
+- ${emojiInstruction}
+- ${hashtagInstruction}
+- ${ctaInstruction}
+- Do NOT number the tweets
+- Do NOT add any explanation or commentary — output ONLY the tweets
+
+Separate each tweet with the exact delimiter: ---TWEET---
+
+ARTICLE:
+${article.substring(0, 8000)}`;
+
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 2048,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        if (response.status === 401) throw new Error('Invalid API key. Click the key button in the top right to update it.');
+        if (response.status === 429) throw new Error('Rate limit hit. Wait a moment and try again.');
+        throw new Error(err.error?.message || `Error ${response.status}. Check your API key and try again.`);
+      }
+
+      const data = await response.json();
+      const rawText = data.content[0].text;
+      const tweets = rawText
+        .split('---TWEET---')
+        .map(t => t.trim())
+        .filter(t => t.length > 10);
+
+      currentResults = tweets;
+      showResults(tweets);
+
+    } catch (err) {
+      showError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ─── Render Results ───────────────────────────────────────────────────────
+  function showResults(tweets) {
+    const panel = document.getElementById('rightPanel');
+    const toneLabels = {
+      insightful: '💡 Insightful',
+      casual: '😊 Casual',
+      punchy: '⚡ Punchy',
+      storytelling: '📖 Story',
+      educational: '🎓 Educational',
+      contrarian: '🔥 Hot take'
+    };
+
+    panel.innerHTML = `
+      <div class="results-header">
+        <div class="results-meta">
+          <strong>${tweets.length} tweets</strong> generated &nbsp;·&nbsp; ${toneLabels[selectedTone]} tone
+        </div>
+        <div class="results-actions">
+          <button class="btn-sm" onclick="generateTweets()">↻ Regenerate</button>
+        </div>
+      </div>
+      <div class="tweets-grid" id="tweetsGrid">
+        ${tweets.map((t, i) => tweetCard(t, i)).join('')}
+      </div>
+    `;
+  }
+
+  function tweetCard(text, index) {
+    const len = text.length;
+    const pct = Math.min((len / 280) * 100, 100);
+    const overClass = len > 280 ? 'over' : len > 240 ? 'warning' : '';
+    const id = `tweet-${index}`;
+
+    return `
+      <div class="tweet-card">
+        <div class="tweet-card-header">
+          <div class="tweet-badge">Post ${index + 1}</div>
+          <div class="tweet-actions">
+            <button class="copy-btn" id="copy-${id}" onclick="copyTweet('${id}', this)">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
+          </div>
+        </div>
+        <div class="tweet-text" id="${id}">${escapeHtml(text)}</div>
+        <div class="tweet-footer">
+          <span class="char-count ${overClass}">${len} / 280 chars${len > 280 ? ' ⚠ over limit' : ''}</span>
+          <div class="char-bar">
+            <div class="char-bar-fill ${overClass}" style="width:${pct}%"></div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function escapeHtml(text) {
+    return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  async function copyTweet(id, btn) {
+    const text = document.getElementById(id).textContent;
+    await navigator.clipboard.writeText(text);
+    btn.classList.add('copied');
+    btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy`;
+    }, 2000);
+  }
+
+  // ─── Loading State ────────────────────────────────────────────────────────
+  function setLoading(on, count = 5) {
+    const btn = document.getElementById('generateBtn');
+    const spinner = document.getElementById('spinner');
+    const text = document.getElementById('generateBtnText');
+
+    if (on) {
+      btn.disabled = true;
+      spinner.style.display = 'block';
+      text.textContent = 'Generating…';
+
+      const panel = document.getElementById('rightPanel');
+      panel.innerHTML = `<div class="loading-state">${Array.from({length: count}, () => `
+        <div class="skeleton-card">
+          <div class="skeleton" style="height:12px;width:40%"></div>
+          <div class="skeleton" style="height:16px;width:100%"></div>
+          <div class="skeleton" style="height:16px;width:85%"></div>
+          <div class="skeleton" style="height:16px;width:60%"></div>
+        </div>`).join('')}</div>`;
+    } else {
+      btn.disabled = false;
+      spinner.style.display = 'none';
+      text.textContent = '✦ Generate tweets';
+    }
+  }
+
+  // ─── Error State ──────────────────────────────────────────────────────────
+  function showError(msg) {
+    const panel = document.getElementById('rightPanel');
+    panel.innerHTML = `
+      <div class="error-banner">
+        <span>⚠</span>
+        <div><strong>Something went wrong</strong><br/>${msg}</div>
+      </div>
+      <div class="empty-state" style="flex:1">
+        <div class="empty-icon">🔄</div>
+        <h2>Try again</h2>
+        <p>Fix the issue above and click Generate again.</p>
+      </div>`;
+  }
+</script>
+
+<!-- Auto-load saved API key into the status indicator on page load -->
+<script>
+  if (apiKey) {
+    document.getElementById('statusDot').classList.remove('inactive');
+    document.getElementById('apiStatusText').textContent = 'API key set ✓';
+  }
+</script>
+
+</body>
+</html>
