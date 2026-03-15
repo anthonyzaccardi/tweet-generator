@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-  <title>Tweet Generator</title>
+  <title>Post Generator</title>
 
   <!-- PWA -->
   <link rel="manifest" href="/manifest.json" />
@@ -1104,8 +1104,8 @@
     <div class="header-brand">
       <div class="header-icon">✦</div>
       <div>
-        <h1>Tweet Generator</h1>
-        <div class="header-subtitle">Turn blog articles into Twitter posts</div>
+        <h1>Post Generator</h1>
+        <div class="header-subtitle">Turn blog articles into posts worth sharing</div>
       </div>
     </div>
     <div class="header-right">
@@ -1122,8 +1122,8 @@
 
     <!-- API Key Banner (shown when no key is set) -->
     <div class="api-banner" id="apiBanner">
-      <span>👋 Add your Claude API key to get started</span>
-      <button class="api-banner-cta" onclick="openModal()">Set key →</button>
+      <span>👋 You'll need a Claude API key to generate posts.</span>
+      <button class="api-banner-cta" onclick="openModal()">Add key</button>
     </div>
 
     <!-- Article Input -->
@@ -1136,7 +1136,7 @@
       </div>
 
       <div id="textMode">
-        <textarea id="articleInput" placeholder="Paste your blog article content here…" oninput="updateArticleCounter(this)"></textarea>
+        <textarea id="articleInput" placeholder="Paste your article here…" oninput="updateArticleCounter(this)"></textarea>
         <div class="char-counter" id="articleCounter">0 words</div>
       </div>
 
@@ -1144,10 +1144,10 @@
         <div class="url-row">
           <input type="url" id="urlInput" class="url-field" placeholder="https://yourblog.com/my-article"
             onkeydown="if(event.key==='Enter')fetchArticle()" />
-          <button class="fetch-btn" id="fetchBtn" onclick="fetchArticle()">Fetch</button>
+          <button class="fetch-btn" id="fetchBtn" onclick="fetchArticle()">Get article</button>
         </div>
         <div class="fetch-status" id="fetchStatus"></div>
-        <div class="fetch-note">Works with most blog posts. Paywalled or JavaScript-only pages may not work.</div>
+        <div class="fetch-note">Works with most blogs and news sites. Won't work on paywalled or JavaScript-heavy pages.</div>
       </div>
     </div>
 
@@ -1184,7 +1184,7 @@
 
     <!-- Count -->
     <div class="panel-section">
-      <div class="section-label">Number of tweets</div>
+      <div class="section-label">Number of posts</div>
       <div class="count-row">
         <span>Generate</span>
         <span class="count-value" id="countDisplay">7</span>
@@ -1232,7 +1232,7 @@
     <div class="panel-section generate-panel-section">
       <button class="generate-btn" id="generateBtn" onclick="generateTweets()">
         <div class="spinner" id="spinner"></div>
-        <span id="generateBtnText">✦ Generate tweets</span>
+        <span id="generateBtnText">✦ Generate posts</span>
       </button>
     </div>
 
@@ -1245,19 +1245,19 @@
     <div class="empty-state" id="emptyState">
       <div class="empty-icon">✦</div>
       <h2>Ready when you are</h2>
-      <p>Paste a blog article on the left and click Generate — Claude will create tweet variations for you instantly.</p>
+      <p>Paste a blog article on the left and tap Generate — Claude will create post variations for you instantly.</p>
       <div class="steps">
         <div class="step">
           <div class="step-num">1</div>
-          <span>Set your API key (click the button in the top right)</span>
+          <span>Set your API key — tap the dot button in the header</span>
         </div>
         <div class="step">
           <div class="step-num">2</div>
-          <span>Paste your blog article content</span>
+          <span>Paste or fetch your article</span>
         </div>
         <div class="step">
           <div class="step-num">3</div>
-          <span>Choose a tone and click Generate</span>
+          <span>Pick a tone and generate</span>
         </div>
       </div>
     </div>
@@ -1269,8 +1269,8 @@
 <!-- ─── API Key Modal ─── -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeModalOnBackdrop(event)">
   <div class="modal">
-    <h2>Claude API Key</h2>
-    <p>Your key is saved in this browser only and never sent anywhere except Anthropic's servers. You can get a key at <strong>console.anthropic.com</strong>.</p>
+    <h2>Your API Key</h2>
+    <p>Saved in your browser only — never shared. Used to call Anthropic's API directly. Get a key at <strong>console.anthropic.com</strong>.</p>
     <div class="input-group">
       <label class="input-label" for="apiKeyInput">API Key</label>
       <input class="input-field" type="password" id="apiKeyInput" placeholder="sk-ant-api03-…" />
@@ -1316,7 +1316,7 @@
     const origText = btn.textContent;
 
     btn.disabled = true;
-    btn.textContent = 'Fetching…';
+    btn.textContent = 'Getting…';
     status.className = 'fetch-status';
     status.textContent = '';
 
@@ -1333,7 +1333,7 @@
       const preview = escapeHtml(data.text.trim().split(/\s+/).slice(0, 80).join(' '));
       status.className = 'fetch-status success';
       status.innerHTML = `
-        <div>✓ <strong>${data.wordCount.toLocaleString()} words</strong> extracted — ready to generate</div>
+        <div>✓ <strong>${data.wordCount.toLocaleString()} words</strong> pulled in — you're good to go</div>
         <details class="fetch-preview">
           <summary>Preview extracted content</summary>
           <div class="fetch-preview-text">${preview}…</div>
@@ -1468,7 +1468,7 @@
 
     if (!apiKey) { openModal(); return; }
     if (articleMode === 'url' && !scrapedText) {
-      showError('Please enter a URL and click Fetch first.');
+      showError('Please enter a URL and tap Get article first.');
       return;
     }
     if (!article) {
@@ -1542,7 +1542,7 @@ ${article.substring(0, 8000)}`;
 
       if (!response.ok) {
         const err = await response.json().catch(() => ({}));
-        if (response.status === 401) throw new Error('Invalid API key. Click the key button in the top right to update it.');
+        if (response.status === 401) throw new Error('Invalid API key. Tap the key button in the header to update it.');
         if (response.status === 429) throw new Error('Rate limit hit. Wait a moment and try again.');
         throw new Error(err.error?.message || `Error ${response.status}. Check your API key and try again.`);
       }
@@ -1579,10 +1579,10 @@ ${article.substring(0, 8000)}`;
     panel.innerHTML = `
       <div class="results-header">
         <div class="results-meta">
-          <strong>${tweets.length} tweets</strong> generated &nbsp;·&nbsp; ${toneLabels[selectedTone]} tone
+          <strong>${tweets.length} posts</strong> generated &nbsp;·&nbsp; ${toneLabels[selectedTone]} tone
         </div>
         <div class="results-actions">
-          <button class="btn-sm" id="copyAllBtn" onclick="copyAllTweets(this)">⊞ Copy all</button>
+          <button class="btn-sm" id="copyAllBtn" onclick="copyAllTweets(this)">📋 Copy all</button>
           <button class="btn-sm" onclick="generateTweets()">↻ Regenerate</button>
         </div>
       </div>
@@ -1616,7 +1616,7 @@ ${article.substring(0, 8000)}`;
         </div>
         <div class="tweet-text" id="${id}" contenteditable="true" spellcheck="true"
           oninput="updateTweetCharCount('${id}')">${escapeHtml(text)}</div>
-        <div class="edit-hint">✏ Tap to edit</div>
+        <div class="edit-hint">✏ Edit</div>
         <div class="tweet-footer">
           <span class="char-count ${overClass}" id="${id}-count">${len} / 280 chars${len > 280 ? ' ⚠ over limit' : ''}</span>
           <div class="char-bar">
@@ -1693,7 +1693,7 @@ ${article.substring(0, 8000)}`;
     } else {
       btn.disabled = false;
       spinner.style.display = 'none';
-      text.textContent = '✦ Generate tweets';
+      text.textContent = '✦ Generate posts';
     }
   }
 
@@ -1703,12 +1703,12 @@ ${article.substring(0, 8000)}`;
     panel.innerHTML = `
       <div class="error-banner">
         <span>⚠</span>
-        <div><strong>Something went wrong</strong><br/>${msg}</div>
+        <div><strong>Couldn't generate posts</strong><br/>${msg}</div>
       </div>
       <div class="empty-state" style="flex:1">
         <div class="empty-icon">🔄</div>
         <h2>Try again</h2>
-        <p>Fix the issue above and click Generate again.</p>
+        <p>Fix the issue above and try again.</p>
       </div>`;
   }
 </script>
