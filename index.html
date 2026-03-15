@@ -367,6 +367,113 @@
     .toggle input:checked + .toggle-slider { background: var(--accent); }
     .toggle input:checked + .toggle-slider::before { transform: translateX(16px); }
 
+    /* ─── Input Mode Tabs ─── */
+    .input-tabs {
+      display: flex;
+      gap: 3px;
+      margin-bottom: 12px;
+      background: var(--surface-3);
+      border-radius: var(--radius-sm);
+      padding: 3px;
+    }
+
+    .input-tab {
+      flex: 1;
+      background: transparent;
+      border: none;
+      border-radius: calc(var(--radius-sm) - 2px);
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 7px 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .input-tab.active {
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+
+    .input-tab:hover:not(.active) { color: var(--text); }
+
+    /* ─── URL Fetch ─── */
+    .url-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .url-field {
+      flex: 1;
+      min-width: 0;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+      padding: 10px 12px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .url-field::placeholder { color: var(--text-dim); }
+    .url-field:focus { border-color: var(--accent); }
+
+    .fetch-btn {
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius-sm);
+      color: white;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 16px;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .fetch-btn:hover:not(:disabled) { background: var(--accent-hover); }
+    .fetch-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .fetch-status {
+      font-size: 12px;
+      margin-top: 8px;
+      padding: 8px 10px;
+      border-radius: var(--radius-xs);
+      display: none;
+      line-height: 1.5;
+    }
+
+    .fetch-status.success {
+      display: block;
+      background: var(--success-dim);
+      border: 1px solid var(--success);
+      color: var(--success);
+    }
+
+    .fetch-status.error {
+      display: block;
+      background: rgba(244, 83, 62, 0.1);
+      border: 1px solid rgba(244, 83, 62, 0.3);
+      color: #f4533e;
+    }
+
+    .fetch-note {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+
     /* ─── Generate Button ─── */
     .generate-btn {
       width: 100%;
@@ -909,8 +1016,26 @@
     <!-- Article Input -->
     <div class="panel-section">
       <div class="section-label">Blog Article</div>
-      <textarea id="articleInput" placeholder="Paste your blog article content here…" oninput="updateArticleCounter(this)"></textarea>
-      <div class="char-counter" id="articleCounter">0 words</div>
+
+      <div class="input-tabs">
+        <button class="input-tab active" onclick="switchInputMode('text', this)">📝 Paste text</button>
+        <button class="input-tab" onclick="switchInputMode('url', this)">🔗 From URL</button>
+      </div>
+
+      <div id="textMode">
+        <textarea id="articleInput" placeholder="Paste your blog article content here…" oninput="updateArticleCounter(this)"></textarea>
+        <div class="char-counter" id="articleCounter">0 words</div>
+      </div>
+
+      <div id="urlMode" style="display:none">
+        <div class="url-row">
+          <input type="url" id="urlInput" class="url-field" placeholder="https://yourblog.com/my-article"
+            onkeydown="if(event.key==='Enter')fetchArticle()" />
+          <button class="fetch-btn" id="fetchBtn" onclick="fetchArticle()">Fetch</button>
+        </div>
+        <div class="fetch-status" id="fetchStatus"></div>
+        <div class="fetch-note">Works with most blog posts. Paywalled or JavaScript-only pages may not work.</div>
+      </div>
     </div>
 
     <!-- Tone -->
@@ -1050,6 +1175,55 @@
   let selectedTone = 'insightful';
   let currentResults = [];
   let isLight = localStorage.getItem('tweet_gen_theme') === 'light';
+  let articleMode = 'text';
+  let scrapedText = '';
+
+  // ─── Input Mode Switch ────────────────────────────────────────────────────
+  function switchInputMode(mode, btn) {
+    articleMode = mode;
+    document.querySelectorAll('.input-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('textMode').style.display = mode === 'text' ? '' : 'none';
+    document.getElementById('urlMode').style.display = mode === 'url' ? '' : 'none';
+    if (mode === 'text') scrapedText = '';
+  }
+
+  // ─── URL Fetch ────────────────────────────────────────────────────────────
+  async function fetchArticle() {
+    const url = document.getElementById('urlInput').value.trim();
+    if (!url) return;
+
+    const btn = document.getElementById('fetchBtn');
+    const status = document.getElementById('fetchStatus');
+    const origText = btn.textContent;
+
+    btn.disabled = true;
+    btn.textContent = 'Fetching…';
+    status.className = 'fetch-status';
+    status.textContent = '';
+
+    try {
+      const res = await fetch('/api/scrape', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to fetch');
+
+      scrapedText = data.text;
+      status.className = 'fetch-status success';
+      status.textContent = `✓ ${data.wordCount.toLocaleString()} words extracted — ready to generate`;
+      btn.textContent = '↻ Re-fetch';
+    } catch (e) {
+      scrapedText = '';
+      status.className = 'fetch-status error';
+      status.textContent = '⚠ ' + e.message;
+      btn.textContent = origText;
+    } finally {
+      btn.disabled = false;
+    }
+  }
 
   // ─── Theme ────────────────────────────────────────────────────────────────
   const LIGHT_VARS = {
@@ -1156,13 +1330,17 @@
 
   // ─── Generate ─────────────────────────────────────────────────────────────
   async function generateTweets() {
-    const article = document.getElementById('articleInput').value.trim();
+    const article = articleMode === 'url' ? scrapedText : document.getElementById('articleInput').value.trim();
     const count = document.getElementById('countSlider').value;
     const useEmoji = document.getElementById('optEmoji').checked;
     const useHashtags = document.getElementById('optHashtags').checked;
     const useCTA = document.getElementById('optCTA').checked;
 
     if (!apiKey) { openModal(); return; }
+    if (articleMode === 'url' && !scrapedText) {
+      showError('Please enter a URL and click Fetch first.');
+      return;
+    }
     if (!article) {
       showError('Please paste a blog article before generating.');
       return;
