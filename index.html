@@ -1093,6 +1093,161 @@
       .tone-grid { grid-template-columns: 1fr 1fr; }
       .header h1 { font-size: 13px; }
     }
+
+    /* ─── History Panel ─── */
+    .history-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 100;
+      justify-content: flex-end;
+    }
+
+    .history-overlay.open { display: flex; }
+
+    .history-panel {
+      background: var(--surface);
+      border-left: 1px solid var(--border-light);
+      width: 360px;
+      max-width: 100vw;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .history-header {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .history-header h3 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .history-close {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xs);
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 13px;
+      padding: 5px 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .history-close:hover { border-color: var(--border-light); color: var(--text); }
+
+    .history-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .history-empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 48px 24px;
+      text-align: center;
+    }
+
+    .history-empty-icon { font-size: 36px; }
+
+    .history-empty h4 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .history-empty p {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .history-entry {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .history-entry:hover {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    .history-entry-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+
+    .history-tone {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .history-date {
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    .history-snippet {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .history-count {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 5px;
+    }
+
+    .history-footer {
+      padding: 12px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .history-clear-btn {
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 13px;
+      padding: 9px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .history-clear-btn:hover {
+      border-color: #f4533e;
+      color: #f4533e;
+    }
   </style>
 </head>
 <body>
@@ -1109,6 +1264,7 @@
       </div>
     </div>
     <div class="header-right">
+      <button class="theme-btn" id="historyBtn" onclick="openHistoryPanel()" title="View history">🕐</button>
       <button class="theme-btn" id="themeBtn" title="Toggle light/dark mode">🌙</button>
       <button class="api-status" onclick="openModal()" id="apiStatusBtn">
         <span class="status-dot inactive" id="statusDot"></span>
@@ -1264,6 +1420,20 @@
 
   </main>
 
+</div>
+
+<!-- ─── History Panel ─── -->
+<div class="history-overlay" id="historyOverlay" onclick="closeHistoryOnBackdrop(event)">
+  <div class="history-panel">
+    <div class="history-header">
+      <h3>🕐 History</h3>
+      <button class="history-close" onclick="closeHistoryPanel()">Close</button>
+    </div>
+    <div class="history-list" id="historyList"></div>
+    <div class="history-footer">
+      <button class="history-clear-btn" onclick="clearHistory()">Clear all history</button>
+    </div>
+  </div>
 </div>
 
 <!-- ─── API Key Modal ─── -->
@@ -1556,6 +1726,7 @@ ${article.substring(0, 8000)}`;
 
       currentResults = tweets;
       showResults(tweets);
+      saveToHistory(tweets, selectedTone, article);
 
     } catch (err) {
       showError(err.message);
@@ -1695,6 +1866,93 @@ ${article.substring(0, 8000)}`;
       spinner.style.display = 'none';
       text.textContent = '✦ Generate posts';
     }
+  }
+
+  // ─── History ──────────────────────────────────────────────────────────────
+  const HISTORY_KEY = 'post_gen_history';
+  const MAX_HISTORY = 50;
+
+  function saveToHistory(posts, tone, articleSnippet) {
+    const history = loadHistory();
+    history.unshift({
+      id: Date.now(),
+      date: new Date().toISOString(),
+      tone,
+      articleSnippet: articleSnippet.replace(/\s+/g, ' ').trim().substring(0, 120),
+      posts
+    });
+    if (history.length > MAX_HISTORY) history.splice(MAX_HISTORY);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  }
+
+  function loadHistory() {
+    try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); }
+    catch { return []; }
+  }
+
+  function openHistoryPanel() {
+    renderHistoryList();
+    document.getElementById('historyOverlay').classList.add('open');
+  }
+
+  function closeHistoryPanel() {
+    document.getElementById('historyOverlay').classList.remove('open');
+  }
+
+  function closeHistoryOnBackdrop(e) {
+    if (e.target === document.getElementById('historyOverlay')) closeHistoryPanel();
+  }
+
+  function renderHistoryList() {
+    const history = loadHistory();
+    const list = document.getElementById('historyList');
+    const toneLabels = {
+      insightful: '💡 Insightful', casual: '😊 Casual', punchy: '⚡ Punchy',
+      storytelling: '📖 Story', educational: '🎓 Educational', contrarian: '🔥 Hot take'
+    };
+
+    if (history.length === 0) {
+      list.innerHTML = `
+        <div class="history-empty">
+          <div class="history-empty-icon">🕐</div>
+          <h4>No history yet</h4>
+          <p>Your generated posts will appear here after each generation.</p>
+        </div>`;
+      return;
+    }
+
+    list.innerHTML = history.map(entry => {
+      const d = new Date(entry.date);
+      const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      return `
+        <div class="history-entry" onclick="restoreFromHistory(${entry.id})">
+          <div class="history-entry-top">
+            <span class="history-tone">${toneLabels[entry.tone] || entry.tone}</span>
+            <span class="history-date">${dateStr} · ${timeStr}</span>
+          </div>
+          <div class="history-snippet">${escapeHtml(entry.articleSnippet)}…</div>
+          <div class="history-count">${entry.posts.length} posts</div>
+        </div>`;
+    }).join('');
+  }
+
+  function restoreFromHistory(id) {
+    const entry = loadHistory().find(e => e.id === id);
+    if (!entry) return;
+    selectedTone = entry.tone;
+    document.querySelectorAll('.tone-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.tone === entry.tone);
+    });
+    currentResults = entry.posts;
+    showResults(entry.posts);
+    closeHistoryPanel();
+  }
+
+  function clearHistory() {
+    if (!confirm('Clear all history? This can\'t be undone.')) return;
+    localStorage.removeItem(HISTORY_KEY);
+    renderHistoryList();
   }
 
   // ─── Error State ──────────────────────────────────────────────────────────
