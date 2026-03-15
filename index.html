@@ -425,24 +425,24 @@
     .url-field:focus { border-color: var(--accent); }
 
     .fetch-btn {
-      background: var(--accent);
-      border: none;
+      background: transparent;
+      border: 1px solid var(--accent);
       border-radius: var(--radius-sm);
-      color: white;
+      color: var(--accent);
       font-family: inherit;
       font-size: 13px;
       font-weight: 600;
       padding: 10px 16px;
       cursor: pointer;
-      transition: background 0.15s;
+      transition: all 0.15s;
       white-space: nowrap;
       flex-shrink: 0;
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
     }
 
-    .fetch-btn:hover:not(:disabled) { background: var(--accent-hover); }
-    .fetch-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .fetch-btn:hover:not(:disabled) { background: var(--accent); color: white; }
+    .fetch-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
     .fetch-status {
       font-size: 12px;
@@ -472,6 +472,42 @@
       color: var(--text-dim);
       margin-top: 8px;
       line-height: 1.5;
+    }
+
+    .fetch-preview {
+      margin-top: 8px;
+      border: none;
+    }
+
+    .fetch-preview summary {
+      font-size: 11px;
+      color: var(--success);
+      cursor: pointer;
+      user-select: none;
+      list-style: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      opacity: 0.85;
+      transition: opacity 0.15s;
+    }
+
+    .fetch-preview summary::-webkit-details-marker { display: none; }
+    .fetch-preview summary:hover { opacity: 1; }
+
+    .fetch-preview[open] summary::before { content: '▾ '; }
+    .fetch-preview:not([open]) summary::before { content: '▸ '; }
+
+    .fetch-preview-text {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      padding: 10px 12px;
+      background: rgba(0, 186, 124, 0.06);
+      border-left: 2px solid var(--success);
+      border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
+      font-style: italic;
     }
 
     /* ─── Generate Button ─── */
@@ -1255,6 +1291,11 @@
   let articleMode = 'text';
   let scrapedText = '';
 
+  // ─── Helpers ──────────────────────────────────────────────────────────────
+  function escapeHtml(text) {
+    return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
   // ─── Input Mode Switch ────────────────────────────────────────────────────
   function switchInputMode(mode, btn) {
     articleMode = mode;
@@ -1289,8 +1330,14 @@
       if (!res.ok) throw new Error(data.error || 'Failed to fetch');
 
       scrapedText = data.text;
+      const preview = escapeHtml(data.text.trim().split(/\s+/).slice(0, 80).join(' '));
       status.className = 'fetch-status success';
-      status.textContent = `✓ ${data.wordCount.toLocaleString()} words extracted — ready to generate`;
+      status.innerHTML = `
+        <div>✓ <strong>${data.wordCount.toLocaleString()} words</strong> extracted — ready to generate</div>
+        <details class="fetch-preview">
+          <summary>Preview extracted content</summary>
+          <div class="fetch-preview-text">${preview}…</div>
+        </details>`;
       btn.textContent = '↻ Re-fetch';
     } catch (e) {
       scrapedText = '';
@@ -1535,6 +1582,7 @@ ${article.substring(0, 8000)}`;
           <strong>${tweets.length} tweets</strong> generated &nbsp;·&nbsp; ${toneLabels[selectedTone]} tone
         </div>
         <div class="results-actions">
+          <button class="btn-sm" id="copyAllBtn" onclick="copyAllTweets(this)">⊞ Copy all</button>
           <button class="btn-sm" onclick="generateTweets()">↻ Regenerate</button>
         </div>
       </div>
@@ -1595,10 +1643,6 @@ ${article.substring(0, 8000)}`;
     }
   }
 
-  function escapeHtml(text) {
-    return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
   async function copyTweet(id, btn) {
     const text = document.getElementById(id).innerText.replace(/\n$/, '');
     await navigator.clipboard.writeText(text);
@@ -1607,6 +1651,23 @@ ${article.substring(0, 8000)}`;
     setTimeout(() => {
       btn.classList.remove('copied');
       btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy`;
+    }, 2000);
+  }
+
+  async function copyAllTweets(btn) {
+    const cards = document.querySelectorAll('.tweet-text');
+    const texts = Array.from(cards)
+      .map(el => el.innerText.replace(/\n$/, '').trim())
+      .filter(Boolean);
+    await navigator.clipboard.writeText(texts.join('\n\n---\n\n'));
+    const orig = btn.textContent;
+    btn.textContent = '✓ All copied!';
+    btn.style.color = 'var(--success)';
+    btn.style.borderColor = 'var(--success)';
+    setTimeout(() => {
+      btn.textContent = orig;
+      btn.style.color = '';
+      btn.style.borderColor = '';
     }, 2000);
   }
 
