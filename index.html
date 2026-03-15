@@ -1066,14 +1066,12 @@
     const verifier     = localStorage.getItem('x_verifier');
     if (state !== savedState || !verifier) return;
     try {
-      const res = await fetch('https://api.twitter.com/2/oauth2/token', {
+      const res = await fetch('/api/token', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          grant_type: 'authorization_code',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           code,
           redirect_uri: X_REDIRECT,
-          client_id: X_CLIENT_ID,
           code_verifier: verifier
         })
       });
@@ -1109,13 +1107,10 @@
     btn.classList.add('posting');
     btn.textContent = 'Posting…';
     try {
-      const res = await fetch('https://api.twitter.com/2/tweets', {
+      const res = await fetch('/api/tweet', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({ text })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, access_token: token })
       });
       const data = await res.json();
       if (data.data?.id) {
