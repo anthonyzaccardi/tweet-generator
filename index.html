@@ -18,6 +18,7 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
+      color-scheme: dark;
       --bg: #0f0f0f;
       --surface: #1a1a1a;
       --surface-2: #242424;
@@ -40,6 +41,7 @@
     }
 
     :root.light {
+      color-scheme: light;
       --bg: #f5f5f5;
       --surface: #ffffff;
       --surface-2: #f0f0f0;
@@ -1050,13 +1052,30 @@
   let isLight = localStorage.getItem('tweet_gen_theme') === 'light';
 
   // ─── Theme ────────────────────────────────────────────────────────────────
+  const LIGHT_VARS = {
+    '--bg': '#f5f5f5', '--surface': '#ffffff', '--surface-2': '#f0f0f0',
+    '--surface-3': '#e5e5e5', '--border': '#e0e0e0', '--border-light': '#cccccc',
+    '--text': '#0f0f0f', '--text-muted': '#555555', '--text-dim': '#aaaaaa'
+  };
+  const DARK_VARS = {
+    '--bg': '#0f0f0f', '--surface': '#1a1a1a', '--surface-2': '#242424',
+    '--surface-3': '#2e2e2e', '--border': '#333333', '--border-light': '#3f3f3f',
+    '--text': '#f0f0f0', '--text-muted': '#888888', '--text-dim': '#555555'
+  };
+
   function applyTheme() {
+    const root = document.documentElement;
+    const vars = isLight ? LIGHT_VARS : DARK_VARS;
+    // Set variables directly so Android Chrome can't override them
+    Object.entries(vars).forEach(([k, v]) => root.style.setProperty(k, v));
     if (isLight) {
-      document.documentElement.classList.add('light');
+      root.classList.add('light');
+      root.style.colorScheme = 'light';
       document.getElementById('themeBtn').textContent = '☀️';
       document.querySelector('meta[name="theme-color"]').setAttribute('content', '#f5f5f5');
     } else {
-      document.documentElement.classList.remove('light');
+      root.classList.remove('light');
+      root.style.colorScheme = 'dark';
       document.getElementById('themeBtn').textContent = '🌙';
       document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0f0f0f');
     }
