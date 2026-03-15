@@ -2,23 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Tweet Generator</title>
-
-  <!-- PWA -->
-  <link rel="manifest" href="/manifest.json" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="TweetGen" />
-  <meta name="theme-color" content="#0f0f0f" />
-  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
-  <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      color-scheme: dark;
       --bg: #0f0f0f;
       --surface: #1a1a1a;
       --surface-2: #242424;
@@ -41,7 +30,6 @@
     }
 
     :root.light {
-      color-scheme: light;
       --bg: #f5f5f5;
       --surface: #ffffff;
       --surface-2: #f0f0f0;
@@ -140,10 +128,6 @@
       justify-content: center;
       transition: all 0.15s;
       flex-shrink: 0;
-      touch-action: manipulation;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-      -webkit-user-select: none;
     }
 
     .theme-btn:hover {
@@ -166,6 +150,64 @@
     }
 
     .api-status:hover { border-color: var(--border-light); }
+
+    .x-connect-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: inherit;
+      color: var(--text-muted);
+      background: var(--surface-2);
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .x-connect-btn:hover { border-color: var(--border-light); color: var(--text); }
+
+    .x-connect-btn.connected {
+      background: rgba(0,0,0,0.8);
+      border-color: #333;
+      color: #fff;
+    }
+
+    .post-btn {
+      background: #000;
+      border: 1px solid #333;
+      border-radius: var(--radius-xs);
+      color: #fff;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .post-btn:hover { background: #1a1a1a; border-color: #555; }
+
+    .post-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .post-btn.posting { opacity: 0.7; }
+
+    .post-btn.posted {
+      background: var(--success-dim);
+      border-color: var(--success);
+      color: var(--success);
+    }
+
+    .post-btn.error {
+      background: rgba(244,83,62,0.1);
+      border-color: #f4533e;
+      color: #f4533e;
+    }
 
     .status-dot {
       width: 6px;
@@ -366,113 +408,6 @@
 
     .toggle input:checked + .toggle-slider { background: var(--accent); }
     .toggle input:checked + .toggle-slider::before { transform: translateX(16px); }
-
-    /* ─── Input Mode Tabs ─── */
-    .input-tabs {
-      display: flex;
-      gap: 3px;
-      margin-bottom: 12px;
-      background: var(--surface-3);
-      border-radius: var(--radius-sm);
-      padding: 3px;
-    }
-
-    .input-tab {
-      flex: 1;
-      background: transparent;
-      border: none;
-      border-radius: calc(var(--radius-sm) - 2px);
-      color: var(--text-muted);
-      font-family: inherit;
-      font-size: 12px;
-      font-weight: 500;
-      padding: 7px 10px;
-      cursor: pointer;
-      transition: all 0.15s;
-      touch-action: manipulation;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .input-tab.active {
-      background: var(--surface);
-      color: var(--text);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-    }
-
-    .input-tab:hover:not(.active) { color: var(--text); }
-
-    /* ─── URL Fetch ─── */
-    .url-row {
-      display: flex;
-      gap: 8px;
-    }
-
-    .url-field {
-      flex: 1;
-      min-width: 0;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--text);
-      font-family: inherit;
-      font-size: 13px;
-      padding: 10px 12px;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-
-    .url-field::placeholder { color: var(--text-dim); }
-    .url-field:focus { border-color: var(--accent); }
-
-    .fetch-btn {
-      background: var(--accent);
-      border: none;
-      border-radius: var(--radius-sm);
-      color: white;
-      font-family: inherit;
-      font-size: 13px;
-      font-weight: 600;
-      padding: 10px 16px;
-      cursor: pointer;
-      transition: background 0.15s;
-      white-space: nowrap;
-      flex-shrink: 0;
-      touch-action: manipulation;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .fetch-btn:hover:not(:disabled) { background: var(--accent-hover); }
-    .fetch-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-
-    .fetch-status {
-      font-size: 12px;
-      margin-top: 8px;
-      padding: 8px 10px;
-      border-radius: var(--radius-xs);
-      display: none;
-      line-height: 1.5;
-    }
-
-    .fetch-status.success {
-      display: block;
-      background: var(--success-dim);
-      border: 1px solid var(--success);
-      color: var(--success);
-    }
-
-    .fetch-status.error {
-      display: block;
-      background: rgba(244, 83, 62, 0.1);
-      border: 1px solid rgba(244, 83, 62, 0.3);
-      color: #f4533e;
-    }
-
-    .fetch-note {
-      font-size: 11px;
-      color: var(--text-dim);
-      margin-top: 8px;
-      line-height: 1.5;
-    }
 
     /* ─── Generate Button ─── */
     .generate-btn {
@@ -884,179 +819,11 @@
 
     .btn-ghost:hover { border-color: var(--border-light); color: var(--text); }
 
-    /* ─── API Key Banner ─── */
-    .api-banner {
-      display: none;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 12px 24px;
-      background: var(--accent-dim);
-      border-bottom: 1px solid rgba(29, 155, 240, 0.25);
-      font-size: 13px;
-      color: var(--text);
-    }
-
-    .api-banner.visible { display: flex; }
-
-    .api-banner-cta {
-      background: var(--accent);
-      border: none;
-      border-radius: var(--radius-xs);
-      color: white;
-      font-family: inherit;
-      font-size: 12px;
-      font-weight: 600;
-      padding: 6px 12px;
-      cursor: pointer;
-      white-space: nowrap;
-      flex-shrink: 0;
-      touch-action: manipulation;
-      transition: background 0.15s;
-    }
-
-    .api-banner-cta:hover { background: var(--accent-hover); }
-
-    /* ─── Editable Tweet Text ─── */
-    .tweet-text[contenteditable] {
-      outline: none;
-      cursor: text;
-      border-radius: var(--radius-xs);
-      padding: 4px 6px;
-      margin: -4px -6px;
-      transition: background 0.15s;
-      min-height: 1em;
-    }
-
-    .tweet-text[contenteditable]:hover { background: var(--surface-2); }
-    .tweet-text[contenteditable]:focus { background: var(--surface-2); }
-
-    .edit-hint {
-      font-size: 10px;
-      color: var(--text-dim);
-      margin-top: 4px;
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-
-    .tweet-card:hover .edit-hint { opacity: 1; }
-
     /* ─── Scrollbar ─── */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--border); }
-
-    /* ─── Mobile Responsive ─── */
-    @media (max-width: 768px) {
-
-      /* Stack panels vertically */
-      .app {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto auto auto;
-      }
-
-      /* Header */
-      .header {
-        padding: 10px 14px;
-        gap: 8px;
-      }
-
-      .header-subtitle { display: none; }
-
-      .header-icon { width: 28px; height: 28px; font-size: 14px; }
-
-      .header h1 { font-size: 14px; }
-
-      .header-right { gap: 6px; }
-
-      .theme-btn { width: 44px; height: 44px; font-size: 18px; }
-
-      .api-status { padding: 5px 8px; border-radius: 16px; }
-      #apiStatusText { display: none; }
-      .status-dot { width: 7px; height: 7px; }
-
-      /* Left panel — full width, no right border */
-      .left-panel {
-        border-right: none;
-        border-bottom: 1px solid var(--border);
-        overflow-y: visible;
-        max-height: none;
-      }
-
-      .panel-section { padding: 14px 16px; }
-
-      textarea { min-height: 130px; font-size: 14px; }
-
-      /* Tone grid — 3 per row on mobile */
-      .tone-grid { grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
-
-      .tone-btn { padding: 8px 6px; }
-      .tone-name { font-size: 11px; }
-      .tone-desc { display: none; }
-
-      /* Slider */
-      .count-value { font-size: 18px; }
-
-      /* Generate button — sticky at bottom on mobile */
-      .generate-panel-section {
-        position: sticky;
-        bottom: 0;
-        z-index: 30;
-        background: var(--surface);
-        border-top: 1px solid var(--border) !important;
-        border-bottom: none !important;
-        padding-bottom: calc(14px + env(safe-area-inset-bottom));
-        box-shadow: 0 -6px 20px rgba(0,0,0,0.18);
-      }
-
-      .generate-btn { padding: 13px; font-size: 14px; }
-
-      /* Banner compact on mobile */
-      .api-banner { padding: 10px 16px; font-size: 12px; }
-
-      /* Right panel */
-      .right-panel {
-        min-height: 50vh;
-        overflow-y: visible;
-      }
-
-      .results-header {
-        padding: 12px 16px;
-        position: relative; /* remove sticky on mobile */
-      }
-
-      .tweets-grid { padding: 12px 16px; gap: 10px; }
-
-      /* Tweet cards */
-      .tweet-card { padding: 14px 14px; }
-
-      .tweet-text { font-size: 14px; }
-
-      .tweet-actions { gap: 5px; }
-
-      .copy-btn { padding: 6px 10px; font-size: 11px; }
-
-      /* Empty state */
-      .empty-state { padding: 32px 20px; }
-      .empty-state h2 { font-size: 17px; }
-      .empty-state p { font-size: 13px; }
-      .empty-icon { width: 52px; height: 52px; font-size: 24px; }
-
-      /* Error banner */
-      .error-banner { margin: 14px 16px; }
-
-      /* Modal */
-      .modal { padding: 20px; width: calc(100vw - 32px); }
-
-      /* Loading skeletons */
-      .loading-state { padding: 16px; }
-    }
-
-    @media (max-width: 400px) {
-      .tone-grid { grid-template-columns: 1fr 1fr; }
-      .header h1 { font-size: 13px; }
-    }
   </style>
 </head>
 <body>
@@ -1066,14 +833,18 @@
   <!-- ─── Header ─── -->
   <header class="header">
     <div class="header-brand">
-      <div class="header-icon">✦</div>
+      <div class="header-icon">𝕏</div>
       <div>
         <h1>Tweet Generator</h1>
         <div class="header-subtitle">Turn blog articles into Twitter posts</div>
       </div>
     </div>
     <div class="header-right">
-      <button class="theme-btn" id="themeBtn" title="Toggle light/dark mode">🌙</button>
+      <button class="theme-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle light/dark mode">🌙</button>
+      <button class="x-connect-btn" onclick="handleXConnect()" id="xConnectBtn">
+        <span id="xConnectIcon">𝕏</span>
+        <span id="xConnectText">Connect X account</span>
+      </button>
       <button class="api-status" onclick="openModal()" id="apiStatusBtn">
         <span class="status-dot inactive" id="statusDot"></span>
         <span id="apiStatusText">API key not set</span>
@@ -1084,35 +855,11 @@
   <!-- ─── Left Panel ─── -->
   <aside class="left-panel">
 
-    <!-- API Key Banner (shown when no key is set) -->
-    <div class="api-banner" id="apiBanner">
-      <span>👋 Add your Claude API key to get started</span>
-      <button class="api-banner-cta" onclick="openModal()">Set key →</button>
-    </div>
-
     <!-- Article Input -->
     <div class="panel-section">
       <div class="section-label">Blog Article</div>
-
-      <div class="input-tabs">
-        <button class="input-tab active" onclick="switchInputMode('text', this)">📝 Paste text</button>
-        <button class="input-tab" onclick="switchInputMode('url', this)">🔗 From URL</button>
-      </div>
-
-      <div id="textMode">
-        <textarea id="articleInput" placeholder="Paste your blog article content here…" oninput="updateArticleCounter(this)"></textarea>
-        <div class="char-counter" id="articleCounter">0 words</div>
-      </div>
-
-      <div id="urlMode" style="display:none">
-        <div class="url-row">
-          <input type="url" id="urlInput" class="url-field" placeholder="https://yourblog.com/my-article"
-            onkeydown="if(event.key==='Enter')fetchArticle()" />
-          <button class="fetch-btn" id="fetchBtn" onclick="fetchArticle()">Fetch</button>
-        </div>
-        <div class="fetch-status" id="fetchStatus"></div>
-        <div class="fetch-note">Works with most blog posts. Paywalled or JavaScript-only pages may not work.</div>
-      </div>
+      <textarea id="articleInput" placeholder="Paste your blog article content here…" oninput="updateArticleCounter(this)"></textarea>
+      <div class="char-counter" id="articleCounter">0 words</div>
     </div>
 
     <!-- Tone -->
@@ -1193,7 +940,7 @@
     </div>
 
     <!-- Generate Button -->
-    <div class="panel-section generate-panel-section">
+    <div class="panel-section">
       <button class="generate-btn" id="generateBtn" onclick="generateTweets()">
         <div class="spinner" id="spinner"></div>
         <span id="generateBtnText">✦ Generate tweets</span>
@@ -1252,83 +999,160 @@
   let selectedTone = 'insightful';
   let currentResults = [];
   let isLight = localStorage.getItem('tweet_gen_theme') === 'light';
-  let articleMode = 'text';
-  let scrapedText = '';
 
-  // ─── Input Mode Switch ────────────────────────────────────────────────────
-  function switchInputMode(mode, btn) {
-    articleMode = mode;
-    document.querySelectorAll('.input-tab').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('textMode').style.display = mode === 'text' ? '' : 'none';
-    document.getElementById('urlMode').style.display = mode === 'url' ? '' : 'none';
-    if (mode === 'text') scrapedText = '';
+  // ─── X / Twitter OAuth 2.0 PKCE ──────────────────────────────────────────
+  const X_CLIENT_ID   = 'VlBzdVhzNDU1Q0tXWjRDbmFzS3E6MTpjaQ';
+  const X_REDIRECT    = 'https://tweet-generator-five-nu.vercel.app/';
+  const X_SCOPES      = 'tweet.write users.read offline.access';
+
+  function xAccessToken() { return localStorage.getItem('x_access_token'); }
+
+  function updateXStatus() {
+    const btn  = document.getElementById('xConnectBtn');
+    const text = document.getElementById('xConnectText');
+    if (xAccessToken()) {
+      btn.classList.add('connected');
+      text.textContent = 'X connected ✓';
+    } else {
+      btn.classList.remove('connected');
+      text.textContent = 'Connect X account';
+    }
   }
 
-  // ─── URL Fetch ────────────────────────────────────────────────────────────
-  async function fetchArticle() {
-    const url = document.getElementById('urlInput').value.trim();
-    if (!url) return;
+  function handleXConnect() {
+    if (xAccessToken()) {
+      if (confirm('Disconnect your X account from this app?')) {
+        localStorage.removeItem('x_access_token');
+        localStorage.removeItem('x_refresh_token');
+        updateXStatus();
+      }
+    } else {
+      startXOAuth();
+    }
+  }
 
-    const btn = document.getElementById('fetchBtn');
-    const status = document.getElementById('fetchStatus');
-    const origText = btn.textContent;
+  function generateVerifier() {
+    const arr = new Uint8Array(32);
+    crypto.getRandomValues(arr);
+    return btoa(String.fromCharCode(...arr)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+  }
 
-    btn.disabled = true;
-    btn.textContent = 'Fetching…';
-    status.className = 'fetch-status';
-    status.textContent = '';
+  async function generateChallenge(verifier) {
+    const data = new TextEncoder().encode(verifier);
+    const digest = await crypto.subtle.digest('SHA-256', data);
+    return btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+  }
 
+  async function startXOAuth() {
+    const verifier   = generateVerifier();
+    const challenge  = await generateChallenge(verifier);
+    const state      = generateVerifier();
+    localStorage.setItem('x_verifier', verifier);
+    localStorage.setItem('x_state', state);
+    const params = new URLSearchParams({
+      response_type: 'code',
+      client_id: X_CLIENT_ID,
+      redirect_uri: X_REDIRECT,
+      scope: X_SCOPES,
+      state,
+      code_challenge: challenge,
+      code_challenge_method: 'S256'
+    });
+    window.location.href = 'https://twitter.com/i/oauth2/authorize?' + params;
+  }
+
+  async function handleOAuthCallback(code, state) {
+    const savedState   = localStorage.getItem('x_state');
+    const verifier     = localStorage.getItem('x_verifier');
+    if (state !== savedState || !verifier) return;
     try {
-      const res = await fetch('/api/scrape', {
+      const res = await fetch('https://api.twitter.com/2/oauth2/token', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url })
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          code,
+          redirect_uri: X_REDIRECT,
+          client_id: X_CLIENT_ID,
+          code_verifier: verifier
+        })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to fetch');
-
-      scrapedText = data.text;
-      status.className = 'fetch-status success';
-      status.textContent = `✓ ${data.wordCount.toLocaleString()} words extracted — ready to generate`;
-      btn.textContent = '↻ Re-fetch';
+      if (data.access_token) {
+        localStorage.setItem('x_access_token', data.access_token);
+        if (data.refresh_token) localStorage.setItem('x_refresh_token', data.refresh_token);
+        localStorage.removeItem('x_verifier');
+        localStorage.removeItem('x_state');
+        window.history.replaceState({}, '', '/');
+        updateXStatus();
+        alert('✅ X account connected! You can now post tweets directly from the app.');
+      } else {
+        alert('Connection failed: ' + (data.error_description || 'Unknown error. Please try again.'));
+      }
     } catch (e) {
-      scrapedText = '';
-      status.className = 'fetch-status error';
-      status.textContent = '⚠ ' + e.message;
-      btn.textContent = origText;
-    } finally {
-      btn.disabled = false;
+      alert('Connection error: ' + e.message);
+    }
+  }
+
+  async function handlePostTweet(id, btn) {
+    const token = xAccessToken();
+    if (!token) {
+      if (confirm('You need to connect your X account first. Connect now?')) startXOAuth();
+      return;
+    }
+    const text = document.getElementById(id).textContent;
+    if (text.length > 280) {
+      alert('This tweet is over 280 characters. Please copy and edit it before posting.');
+      return;
+    }
+    btn.disabled  = true;
+    btn.classList.add('posting');
+    btn.textContent = 'Posting…';
+    try {
+      const res = await fetch('https://api.twitter.com/2/tweets', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ text })
+      });
+      const data = await res.json();
+      if (data.data?.id) {
+        btn.classList.remove('posting');
+        btn.classList.add('posted');
+        btn.textContent = '✓ Posted!';
+        setTimeout(() => {
+          btn.classList.remove('posted');
+          btn.textContent = '𝕏 Post';
+          btn.disabled = false;
+        }, 3000);
+      } else if (res.status === 401) {
+        localStorage.removeItem('x_access_token');
+        updateXStatus();
+        btn.classList.remove('posting');
+        btn.classList.add('error');
+        btn.textContent = 'Session expired';
+        setTimeout(() => { btn.classList.remove('error'); btn.textContent = '𝕏 Post'; btn.disabled = false; }, 3000);
+      } else {
+        throw new Error(data.detail || data.errors?.[0]?.message || 'Post failed');
+      }
+    } catch (e) {
+      btn.classList.remove('posting');
+      btn.classList.add('error');
+      btn.textContent = '✗ Failed';
+      setTimeout(() => { btn.classList.remove('error'); btn.textContent = '𝕏 Post'; btn.disabled = false; }, 3000);
     }
   }
 
   // ─── Theme ────────────────────────────────────────────────────────────────
-  const LIGHT_VARS = {
-    '--bg': '#f5f5f5', '--surface': '#ffffff', '--surface-2': '#f0f0f0',
-    '--surface-3': '#e5e5e5', '--border': '#e0e0e0', '--border-light': '#cccccc',
-    '--text': '#0f0f0f', '--text-muted': '#555555', '--text-dim': '#aaaaaa'
-  };
-  const DARK_VARS = {
-    '--bg': '#0f0f0f', '--surface': '#1a1a1a', '--surface-2': '#242424',
-    '--surface-3': '#2e2e2e', '--border': '#333333', '--border-light': '#3f3f3f',
-    '--text': '#f0f0f0', '--text-muted': '#888888', '--text-dim': '#555555'
-  };
-
   function applyTheme() {
-    const root = document.documentElement;
-    const vars = isLight ? LIGHT_VARS : DARK_VARS;
-    // Set variables directly so Android Chrome can't override them
-    Object.entries(vars).forEach(([k, v]) => root.style.setProperty(k, v));
     if (isLight) {
-      root.classList.add('light');
-      root.style.colorScheme = 'light';
+      document.documentElement.classList.add('light');
       document.getElementById('themeBtn').textContent = '☀️';
-      document.querySelector('meta[name="theme-color"]').setAttribute('content', '#f5f5f5');
     } else {
-      root.classList.remove('light');
-      root.style.colorScheme = 'dark';
+      document.documentElement.classList.remove('light');
       document.getElementById('themeBtn').textContent = '🌙';
-      document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0f0f0f');
     }
   }
 
@@ -1339,28 +1163,17 @@
   }
 
   // ─── Init ─────────────────────────────────────────────────────────────────
-  function updateBanner() {
-    document.getElementById('apiBanner').classList.toggle('visible', !apiKey);
-  }
-
   window.onload = () => {
     applyTheme();
-    updateBanner();
+    updateXStatus();
     if (apiKey) updateApiStatus(true);
     document.getElementById('apiKeyInput').value = apiKey;
 
-    // Wire theme button with both click and touchend for reliable mobile support
-    const themeBtn = document.getElementById('themeBtn');
-    let themeTouchFired = false;
-    themeBtn.addEventListener('touchend', (e) => {
-      e.preventDefault();
-      themeTouchFired = true;
-      toggleTheme();
-      setTimeout(() => { themeTouchFired = false; }, 500);
-    }, { passive: false });
-    themeBtn.addEventListener('click', () => {
-      if (!themeTouchFired) toggleTheme();
-    });
+    // Handle OAuth callback (X redirects back here with ?code=…)
+    const params = new URLSearchParams(window.location.search);
+    const code   = params.get('code');
+    const state  = params.get('state');
+    if (code && state) handleOAuthCallback(code, state);
   };
 
   // ─── API Key Modal ────────────────────────────────────────────────────────
@@ -1383,7 +1196,6 @@
     apiKey = val;
     localStorage.setItem('tweet_gen_api_key', val);
     updateApiStatus(true);
-    updateBanner();
     closeModal();
   }
 
@@ -1413,17 +1225,13 @@
 
   // ─── Generate ─────────────────────────────────────────────────────────────
   async function generateTweets() {
-    const article = articleMode === 'url' ? scrapedText : document.getElementById('articleInput').value.trim();
+    const article = document.getElementById('articleInput').value.trim();
     const count = document.getElementById('countSlider').value;
     const useEmoji = document.getElementById('optEmoji').checked;
     const useHashtags = document.getElementById('optHashtags').checked;
     const useCTA = document.getElementById('optCTA').checked;
 
     if (!apiKey) { openModal(); return; }
-    if (articleMode === 'url' && !scrapedText) {
-      showError('Please enter a URL and click Fetch first.');
-      return;
-    }
     if (!article) {
       showError('Please paste a blog article before generating.');
       return;
@@ -1542,11 +1350,6 @@ ${article.substring(0, 8000)}`;
         ${tweets.map((t, i) => tweetCard(t, i)).join('')}
       </div>
     `;
-
-    // On mobile, scroll results into view automatically
-    if (window.innerWidth <= 768) {
-      setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
-    }
   }
 
   function tweetCard(text, index) {
@@ -1564,35 +1367,19 @@ ${article.substring(0, 8000)}`;
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
               Copy
             </button>
+            <button class="post-btn" id="post-${id}" onclick="handlePostTweet('${id}', this)">
+              𝕏 Post
+            </button>
           </div>
         </div>
-        <div class="tweet-text" id="${id}" contenteditable="true" spellcheck="true"
-          oninput="updateTweetCharCount('${id}')">${escapeHtml(text)}</div>
-        <div class="edit-hint">✏ Tap to edit</div>
+        <div class="tweet-text" id="${id}">${escapeHtml(text)}</div>
         <div class="tweet-footer">
-          <span class="char-count ${overClass}" id="${id}-count">${len} / 280 chars${len > 280 ? ' ⚠ over limit' : ''}</span>
+          <span class="char-count ${overClass}">${len} / 280 chars${len > 280 ? ' ⚠ over limit' : ''}</span>
           <div class="char-bar">
-            <div class="char-bar-fill ${overClass}" id="${id}-bar" style="width:${pct}%"></div>
+            <div class="char-bar-fill ${overClass}" style="width:${pct}%"></div>
           </div>
         </div>
       </div>`;
-  }
-
-  function updateTweetCharCount(id) {
-    const el = document.getElementById(id);
-    const len = el.innerText.replace(/\n$/, '').length;
-    const pct = Math.min((len / 280) * 100, 100);
-    const overClass = len > 280 ? 'over' : len > 240 ? 'warning' : '';
-    const countEl = document.getElementById(id + '-count');
-    const barEl = document.getElementById(id + '-bar');
-    if (countEl) {
-      countEl.className = `char-count ${overClass}`;
-      countEl.textContent = `${len} / 280 chars${len > 280 ? ' ⚠ over limit' : ''}`;
-    }
-    if (barEl) {
-      barEl.className = `char-bar-fill ${overClass}`;
-      barEl.style.width = `${pct}%`;
-    }
   }
 
   function escapeHtml(text) {
@@ -1600,7 +1387,7 @@ ${article.substring(0, 8000)}`;
   }
 
   async function copyTweet(id, btn) {
-    const text = document.getElementById(id).innerText.replace(/\n$/, '');
+    const text = document.getElementById(id).textContent;
     await navigator.clipboard.writeText(text);
     btn.classList.add('copied');
     btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
