@@ -161,64 +161,6 @@
 
     .api-status:hover { border-color: var(--border-light); }
 
-    .x-connect-btn {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      font-weight: 600;
-      font-family: inherit;
-      color: var(--text-muted);
-      background: var(--surface-2);
-      padding: 6px 12px;
-      border-radius: 20px;
-      border: 1px solid var(--border);
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-
-    .x-connect-btn:hover { border-color: var(--border-light); color: var(--text); }
-
-    .x-connect-btn.connected {
-      background: rgba(0,0,0,0.8);
-      border-color: #333;
-      color: #fff;
-    }
-
-    .post-btn {
-      background: #000;
-      border: 1px solid #333;
-      border-radius: var(--radius-xs);
-      color: #fff;
-      font-family: inherit;
-      font-size: 12px;
-      font-weight: 600;
-      padding: 5px 12px;
-      cursor: pointer;
-      transition: all 0.15s;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .post-btn:hover { background: #1a1a1a; border-color: #555; }
-
-    .post-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    .post-btn.posting { opacity: 0.7; }
-
-    .post-btn.posted {
-      background: var(--success-dim);
-      border-color: var(--success);
-      color: var(--success);
-    }
-
-    .post-btn.error {
-      background: rgba(244,83,62,0.1);
-      border-color: #f4533e;
-      color: #f4533e;
-    }
-
     .status-dot {
       width: 6px;
       height: 6px;
@@ -858,13 +800,7 @@
 
       .header-right { gap: 6px; }
 
-      .theme-btn { width: 30px; height: 30px; font-size: 14px; }
-
-      /* Shrink header buttons to icon-only */
-      .x-connect-btn { padding: 5px 8px; font-size: 11px; border-radius: 16px; }
-      #xConnectText { display: none; }
-      #xConnectIcon { font-size: 14px; }
-      .x-connect-btn.connected #xConnectText { display: inline; font-size: 11px; }
+      .theme-btn { width: 44px; height: 44px; font-size: 18px; }
 
       .api-status { padding: 5px 8px; border-radius: 16px; }
       #apiStatusText { display: none; }
@@ -915,7 +851,7 @@
 
       .tweet-actions { gap: 5px; }
 
-      .copy-btn, .post-btn { padding: 6px 10px; font-size: 11px; }
+      .copy-btn { padding: 6px 10px; font-size: 11px; }
 
       /* Empty state */
       .empty-state { padding: 32px 20px; }
@@ -946,7 +882,7 @@
   <!-- ─── Header ─── -->
   <header class="header">
     <div class="header-brand">
-      <div class="header-icon">𝕏</div>
+      <div class="header-icon">✦</div>
       <div>
         <h1>Tweet Generator</h1>
         <div class="header-subtitle">Turn blog articles into Twitter posts</div>
@@ -954,10 +890,6 @@
     </div>
     <div class="header-right">
       <button class="theme-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle light/dark mode">🌙</button>
-      <button class="x-connect-btn" onclick="handleXConnect()" id="xConnectBtn">
-        <span id="xConnectIcon">𝕏</span>
-        <span id="xConnectText">Connect X account</span>
-      </button>
       <button class="api-status" onclick="openModal()" id="apiStatusBtn">
         <span class="status-dot inactive" id="statusDot"></span>
         <span id="apiStatusText">API key not set</span>
@@ -1113,156 +1045,16 @@
   let currentResults = [];
   let isLight = localStorage.getItem('tweet_gen_theme') === 'light';
 
-  // ─── X / Twitter OAuth 2.0 PKCE ──────────────────────────────────────────
-  const X_CLIENT_ID   = 'VlBzdVhzNDU1Q0tXWjRDbmFzS3E6MTpjaQ';
-  const X_REDIRECT    = 'https://tweet-generator-five-nu.vercel.app/';
-  const X_SCOPES      = 'tweet.write users.read offline.access';
-
-  function xAccessToken() { return localStorage.getItem('x_access_token'); }
-
-  function updateXStatus() {
-    const btn  = document.getElementById('xConnectBtn');
-    const text = document.getElementById('xConnectText');
-    if (xAccessToken()) {
-      btn.classList.add('connected');
-      text.textContent = 'X connected ✓';
-    } else {
-      btn.classList.remove('connected');
-      text.textContent = 'Connect X account';
-    }
-  }
-
-  function handleXConnect() {
-    if (xAccessToken()) {
-      if (confirm('Disconnect your X account from this app?')) {
-        localStorage.removeItem('x_access_token');
-        localStorage.removeItem('x_refresh_token');
-        updateXStatus();
-      }
-    } else {
-      startXOAuth();
-    }
-  }
-
-  function generateVerifier() {
-    const arr = new Uint8Array(32);
-    crypto.getRandomValues(arr);
-    return btoa(String.fromCharCode(...arr)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
-  }
-
-  async function generateChallenge(verifier) {
-    const data = new TextEncoder().encode(verifier);
-    const digest = await crypto.subtle.digest('SHA-256', data);
-    return btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
-  }
-
-  async function startXOAuth() {
-    const verifier   = generateVerifier();
-    const challenge  = await generateChallenge(verifier);
-    const state      = generateVerifier();
-    localStorage.setItem('x_verifier', verifier);
-    localStorage.setItem('x_state', state);
-    const params = new URLSearchParams({
-      response_type: 'code',
-      client_id: X_CLIENT_ID,
-      redirect_uri: X_REDIRECT,
-      scope: X_SCOPES,
-      state,
-      code_challenge: challenge,
-      code_challenge_method: 'S256'
-    });
-    window.location.href = 'https://twitter.com/i/oauth2/authorize?' + params;
-  }
-
-  async function handleOAuthCallback(code, state) {
-    const savedState   = localStorage.getItem('x_state');
-    const verifier     = localStorage.getItem('x_verifier');
-    if (state !== savedState || !verifier) return;
-    try {
-      const res = await fetch('/api/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          code,
-          redirect_uri: X_REDIRECT,
-          code_verifier: verifier
-        })
-      });
-      const data = await res.json();
-      if (data.access_token) {
-        localStorage.setItem('x_access_token', data.access_token);
-        if (data.refresh_token) localStorage.setItem('x_refresh_token', data.refresh_token);
-        localStorage.removeItem('x_verifier');
-        localStorage.removeItem('x_state');
-        window.history.replaceState({}, '', '/');
-        updateXStatus();
-        alert('✅ X account connected! You can now post tweets directly from the app.');
-      } else {
-        alert('Connection failed: ' + (data.error_description || 'Unknown error. Please try again.'));
-      }
-    } catch (e) {
-      alert('Connection error: ' + e.message);
-    }
-  }
-
-  async function handlePostTweet(id, btn) {
-    const token = xAccessToken();
-    if (!token) {
-      if (confirm('You need to connect your X account first. Connect now?')) startXOAuth();
-      return;
-    }
-    const text = document.getElementById(id).textContent;
-    if (text.length > 280) {
-      alert('This tweet is over 280 characters. Please copy and edit it before posting.');
-      return;
-    }
-    btn.disabled  = true;
-    btn.classList.add('posting');
-    btn.textContent = 'Posting…';
-    try {
-      const res = await fetch('/api/tweet', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, access_token: token })
-      });
-      const data = await res.json();
-      if (data.data?.id) {
-        btn.classList.remove('posting');
-        btn.classList.add('posted');
-        btn.textContent = '✓ Posted!';
-        setTimeout(() => {
-          btn.classList.remove('posted');
-          btn.textContent = '𝕏 Post';
-          btn.disabled = false;
-        }, 3000);
-      } else if (res.status === 401) {
-        localStorage.removeItem('x_access_token');
-        updateXStatus();
-        btn.classList.remove('posting');
-        btn.classList.add('error');
-        btn.textContent = 'Session expired — reconnect X';
-        setTimeout(() => { btn.classList.remove('error'); btn.textContent = '𝕏 Post'; btn.disabled = false; }, 4000);
-      } else {
-        const msg = data.error || data.detail || data.title || 'Post failed';
-        alert('X error: ' + msg);
-        throw new Error(msg);
-      }
-    } catch (e) {
-      btn.classList.remove('posting');
-      btn.classList.add('error');
-      btn.textContent = '✗ Failed';
-      setTimeout(() => { btn.classList.remove('error'); btn.textContent = '𝕏 Post'; btn.disabled = false; }, 3000);
-    }
-  }
-
   // ─── Theme ────────────────────────────────────────────────────────────────
   function applyTheme() {
     if (isLight) {
       document.documentElement.classList.add('light');
       document.getElementById('themeBtn').textContent = '☀️';
+      document.querySelector('meta[name="theme-color"]').setAttribute('content', '#f5f5f5');
     } else {
       document.documentElement.classList.remove('light');
       document.getElementById('themeBtn').textContent = '🌙';
+      document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0f0f0f');
     }
   }
 
@@ -1275,15 +1067,8 @@
   // ─── Init ─────────────────────────────────────────────────────────────────
   window.onload = () => {
     applyTheme();
-    updateXStatus();
     if (apiKey) updateApiStatus(true);
     document.getElementById('apiKeyInput').value = apiKey;
-
-    // Handle OAuth callback (X redirects back here with ?code=…)
-    const params = new URLSearchParams(window.location.search);
-    const code   = params.get('code');
-    const state  = params.get('state');
-    if (code && state) handleOAuthCallback(code, state);
   };
 
   // ─── API Key Modal ────────────────────────────────────────────────────────
@@ -1481,9 +1266,6 @@ ${article.substring(0, 8000)}`;
             <button class="copy-btn" id="copy-${id}" onclick="copyTweet('${id}', this)">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
               Copy
-            </button>
-            <button class="post-btn" id="post-${id}" onclick="handlePostTweet('${id}', this)">
-              𝕏 Post
             </button>
           </div>
         </div>
