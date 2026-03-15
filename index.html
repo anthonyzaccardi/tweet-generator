@@ -1127,10 +1127,12 @@
         updateXStatus();
         btn.classList.remove('posting');
         btn.classList.add('error');
-        btn.textContent = 'Session expired';
-        setTimeout(() => { btn.classList.remove('error'); btn.textContent = '𝕏 Post'; btn.disabled = false; }, 3000);
+        btn.textContent = 'Session expired — reconnect X';
+        setTimeout(() => { btn.classList.remove('error'); btn.textContent = '𝕏 Post'; btn.disabled = false; }, 4000);
       } else {
-        throw new Error(data.detail || data.errors?.[0]?.message || 'Post failed');
+        const msg = data.error || data.detail || data.title || 'Post failed';
+        alert('X error: ' + msg);
+        throw new Error(msg);
       }
     } catch (e) {
       btn.classList.remove('posting');
