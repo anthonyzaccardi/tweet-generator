@@ -29,6 +29,25 @@
       --radius-xs: 6px;
     }
 
+    :root.light {
+      --bg: #f5f5f5;
+      --surface: #ffffff;
+      --surface-2: #f0f0f0;
+      --surface-3: #e5e5e5;
+      --border: #e0e0e0;
+      --border-light: #cccccc;
+      --text: #0f0f0f;
+      --text-muted: #555;
+      --text-dim: #aaa;
+      --accent: #1d9bf0;
+      --accent-hover: #1a8cd8;
+      --accent-dim: rgba(29, 155, 240, 0.10);
+      --accent-dim-hover: rgba(29, 155, 240, 0.18);
+      --success: #00a86b;
+      --success-dim: rgba(0, 168, 107, 0.10);
+      --warning: #d4870a;
+    }
+
     html { height: 100%; }
 
     body {
@@ -87,6 +106,33 @@
       font-size: 12px;
       color: var(--text-muted);
       margin-top: 1px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .theme-btn {
+      width: 34px;
+      height: 34px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-muted);
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .theme-btn:hover {
+      border-color: var(--border-light);
+      color: var(--text);
     }
 
     .api-status {
@@ -735,10 +781,13 @@
         <div class="header-subtitle">Turn blog articles into Twitter posts</div>
       </div>
     </div>
-    <button class="api-status" onclick="openModal()" id="apiStatusBtn">
-      <span class="status-dot inactive" id="statusDot"></span>
-      <span id="apiStatusText">API key not set</span>
-    </button>
+    <div class="header-right">
+      <button class="theme-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle light/dark mode">🌙</button>
+      <button class="api-status" onclick="openModal()" id="apiStatusBtn">
+        <span class="status-dot inactive" id="statusDot"></span>
+        <span id="apiStatusText">API key not set</span>
+      </button>
+    </div>
   </header>
 
   <!-- ─── Left Panel ─── -->
@@ -887,10 +936,28 @@
   let apiKey = localStorage.getItem('tweet_gen_api_key') || '';
   let selectedTone = 'insightful';
   let currentResults = [];
+  let isLight = localStorage.getItem('tweet_gen_theme') === 'light';
+
+  // ─── Theme ────────────────────────────────────────────────────────────────
+  function applyTheme() {
+    if (isLight) {
+      document.documentElement.classList.add('light');
+      document.getElementById('themeBtn').textContent = '☀️';
+    } else {
+      document.documentElement.classList.remove('light');
+      document.getElementById('themeBtn').textContent = '🌙';
+    }
+  }
+
+  function toggleTheme() {
+    isLight = !isLight;
+    localStorage.setItem('tweet_gen_theme', isLight ? 'light' : 'dark');
+    applyTheme();
+  }
 
   // ─── Init ─────────────────────────────────────────────────────────────────
   window.onload = () => {
-    // Pre-fill the stored API key
+    applyTheme();
     if (apiKey) {
       updateApiStatus(true);
     }
