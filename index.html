@@ -138,6 +138,10 @@
       justify-content: center;
       transition: all 0.15s;
       flex-shrink: 0;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
     }
 
     .theme-btn:hover {
@@ -889,7 +893,7 @@
       </div>
     </div>
     <div class="header-right">
-      <button class="theme-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle light/dark mode">🌙</button>
+      <button class="theme-btn" id="themeBtn" title="Toggle light/dark mode">🌙</button>
       <button class="api-status" onclick="openModal()" id="apiStatusBtn">
         <span class="status-dot inactive" id="statusDot"></span>
         <span id="apiStatusText">API key not set</span>
@@ -1069,6 +1073,19 @@
     applyTheme();
     if (apiKey) updateApiStatus(true);
     document.getElementById('apiKeyInput').value = apiKey;
+
+    // Wire theme button with both click and touchend for reliable mobile support
+    const themeBtn = document.getElementById('themeBtn');
+    let themeTouchFired = false;
+    themeBtn.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      themeTouchFired = true;
+      toggleTheme();
+      setTimeout(() => { themeTouchFired = false; }, 500);
+    }, { passive: false });
+    themeBtn.addEventListener('click', () => {
+      if (!themeTouchFired) toggleTheme();
+    });
   };
 
   // ─── API Key Modal ────────────────────────────────────────────────────────
