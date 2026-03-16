@@ -14,6 +14,10 @@
   <meta name="theme-color" content="#0f0f0f" />
   <link rel="apple-touch-icon" href="/icons/icon-192.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+
+  <!-- Chart.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -71,7 +75,7 @@
       min-height: 100%;
     }
 
-    /* ─── Layout ─── */
+    /* ─── App Shell ─── */
     .app {
       display: grid;
       grid-template-columns: 380px 1fr;
@@ -85,45 +89,85 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 16px 28px;
+      padding: 12px 24px;
       border-bottom: 1px solid var(--border);
       background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      gap: 16px;
     }
 
     .header-brand {
       display: flex;
       align-items: center;
       gap: 10px;
+      flex-shrink: 0;
     }
 
     .header-icon {
-      width: 32px;
-      height: 32px;
+      width: 30px;
+      height: 30px;
       background: var(--accent);
       border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
+      font-size: 15px;
+      flex-shrink: 0;
     }
 
     .header h1 {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 600;
       color: var(--text);
       letter-spacing: -0.01em;
     }
 
     .header-subtitle {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--text-muted);
       margin-top: 1px;
     }
+
+    /* ─── Nav Tabs ─── */
+    .nav-tabs {
+      display: flex;
+      background: var(--surface-2);
+      border-radius: 20px;
+      padding: 3px;
+      gap: 2px;
+    }
+
+    .nav-tab {
+      padding: 6px 20px;
+      border-radius: 17px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .nav-tab.active {
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+
+    .nav-tab:hover:not(.active) { color: var(--text); }
 
     .header-right {
       display: flex;
       align-items: center;
       gap: 8px;
+      flex-shrink: 0;
     }
 
     .theme-btn {
@@ -146,10 +190,7 @@
       -webkit-user-select: none;
     }
 
-    .theme-btn:hover {
-      border-color: var(--border-light);
-      color: var(--text);
-    }
+    .theme-btn:hover { border-color: var(--border-light); color: var(--text); }
 
     .api-status {
       display: flex;
@@ -176,6 +217,17 @@
     }
 
     .status-dot.inactive { background: var(--text-dim); }
+
+    /* ─── Page containers ─── */
+    #generateLeft, #rightPanel {
+      /* these are the generate page — display toggled by JS */
+    }
+
+    #page-analytics, #page-history {
+      grid-column: 1 / -1;
+      display: none;
+      overflow-y: auto;
+    }
 
     /* ─── Left Panel ─── */
     .left-panel {
@@ -253,10 +305,7 @@
       gap: 2px;
     }
 
-    .tone-btn:hover {
-      border-color: var(--border-light);
-      color: var(--text);
-    }
+    .tone-btn:hover { border-color: var(--border-light); color: var(--text); }
 
     .tone-btn.active {
       background: var(--accent-dim);
@@ -323,10 +372,7 @@
 
     .option-row:last-child { border-bottom: none; }
 
-    .option-label {
-      font-size: 13px;
-      color: var(--text);
-    }
+    .option-label { font-size: 13px; color: var(--text); }
 
     .option-sub {
       font-size: 11px;
@@ -402,10 +448,7 @@
     .input-tab:hover:not(.active) { color: var(--text); }
 
     /* ─── URL Fetch ─── */
-    .url-row {
-      display: flex;
-      gap: 8px;
-    }
+    .url-row { display: flex; gap: 8px; }
 
     .url-field {
       flex: 1;
@@ -474,10 +517,7 @@
       line-height: 1.5;
     }
 
-    .fetch-preview {
-      margin-top: 8px;
-      border: none;
-    }
+    .fetch-preview { margin-top: 8px; border: none; }
 
     .fetch-preview summary {
       font-size: 11px;
@@ -494,7 +534,6 @@
 
     .fetch-preview summary::-webkit-details-marker { display: none; }
     .fetch-preview summary:hover { opacity: 1; }
-
     .fetch-preview[open] summary::before { content: '▾ '; }
     .fetch-preview:not([open]) summary::before { content: '▸ '; }
 
@@ -532,11 +571,7 @@
 
     .generate-btn:hover:not(:disabled) { background: var(--accent-hover); }
     .generate-btn:active:not(:disabled) { transform: scale(0.99); }
-
-    .generate-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
+    .generate-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
     .spinner {
       width: 16px;
@@ -581,11 +616,7 @@
       font-size: 28px;
     }
 
-    .empty-state h2 {
-      font-size: 20px;
-      font-weight: 600;
-      color: var(--text);
-    }
+    .empty-state h2 { font-size: 20px; font-weight: 600; color: var(--text); }
 
     .empty-state p {
       font-size: 14px;
@@ -638,20 +669,10 @@
       z-index: 10;
     }
 
-    .results-meta {
-      font-size: 13px;
-      color: var(--text-muted);
-    }
+    .results-meta { font-size: 13px; color: var(--text-muted); }
+    .results-meta strong { color: var(--text); font-weight: 600; }
 
-    .results-meta strong {
-      color: var(--text);
-      font-weight: 600;
-    }
-
-    .results-actions {
-      display: flex;
-      gap: 8px;
-    }
+    .results-actions { display: flex; gap: 8px; }
 
     .btn-sm {
       background: var(--surface-2);
@@ -665,10 +686,7 @@
       transition: all 0.15s;
     }
 
-    .btn-sm:hover {
-      border-color: var(--border-light);
-      color: var(--text);
-    }
+    .btn-sm:hover { border-color: var(--border-light); color: var(--text); }
 
     .tweets-grid {
       padding: 20px 28px;
@@ -726,17 +744,8 @@
       gap: 5px;
     }
 
-    .copy-btn:hover {
-      background: var(--accent-dim);
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
-    .copy-btn.copied {
-      background: var(--success-dim);
-      border-color: var(--success);
-      color: var(--success);
-    }
+    .copy-btn:hover { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+    .copy-btn.copied { background: var(--success-dim); border-color: var(--success); color: var(--success); }
 
     .tweet-text {
       font-size: 15px;
@@ -755,29 +764,12 @@
       border-top: 1px solid var(--border);
     }
 
-    .char-count {
-      font-size: 12px;
-      color: var(--text-dim);
-    }
-
+    .char-count { font-size: 12px; color: var(--text-dim); }
     .char-count.warning { color: var(--warning); }
     .char-count.over { color: #f4533e; }
 
-    .char-bar {
-      width: 80px;
-      height: 3px;
-      background: var(--surface-3);
-      border-radius: 2px;
-      overflow: hidden;
-    }
-
-    .char-bar-fill {
-      height: 100%;
-      background: var(--success);
-      border-radius: 2px;
-      transition: width 0.2s;
-    }
-
+    .char-bar { width: 80px; height: 3px; background: var(--surface-3); border-radius: 2px; overflow: hidden; }
+    .char-bar-fill { height: 100%; background: var(--success); border-radius: 2px; transition: width 0.2s; }
     .char-bar-fill.warning { background: var(--warning); }
     .char-bar-fill.over { background: #f4533e; }
 
@@ -806,10 +798,7 @@
       border-radius: 4px;
     }
 
-    @keyframes shimmer {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
     /* ─── Error State ─── */
     .error-banner {
@@ -831,7 +820,7 @@
       position: fixed;
       inset: 0;
       background: rgba(0,0,0,0.7);
-      z-index: 100;
+      z-index: 200;
       align-items: center;
       justify-content: center;
     }
@@ -847,11 +836,7 @@
       max-width: 90vw;
     }
 
-    .modal h2 {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
+    .modal h2 { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
 
     .modal p {
       font-size: 13px;
@@ -983,118 +968,7 @@
     ::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--border); }
 
-    /* ─── Mobile Responsive ─── */
-    @media (max-width: 768px) {
-
-      /* Stack panels vertically */
-      .app {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto auto auto;
-      }
-
-      /* Header */
-      .header {
-        padding: 10px 14px;
-        gap: 8px;
-      }
-
-      .header-subtitle { display: none; }
-
-      .header-icon { width: 28px; height: 28px; font-size: 14px; }
-
-      .header h1 { font-size: 14px; }
-
-      .header-right { gap: 6px; }
-
-      .theme-btn { width: 44px; height: 44px; font-size: 18px; }
-
-      .api-status { padding: 5px 8px; border-radius: 16px; }
-      #apiStatusText { display: none; }
-      .status-dot { width: 7px; height: 7px; }
-
-      /* Left panel — full width, no right border */
-      .left-panel {
-        border-right: none;
-        border-bottom: 1px solid var(--border);
-        overflow-y: visible;
-        max-height: none;
-      }
-
-      .panel-section { padding: 14px 16px; }
-
-      textarea { min-height: 130px; font-size: 14px; }
-
-      /* Tone grid — 3 per row on mobile */
-      .tone-grid { grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
-
-      .tone-btn { padding: 8px 6px; }
-      .tone-name { font-size: 11px; }
-      .tone-desc { display: none; }
-
-      /* Slider */
-      .count-value { font-size: 18px; }
-
-      /* Generate button — sticky at bottom on mobile */
-      .generate-panel-section {
-        position: sticky;
-        bottom: 0;
-        z-index: 30;
-        background: var(--surface);
-        border-top: 1px solid var(--border) !important;
-        border-bottom: none !important;
-        padding-bottom: calc(14px + env(safe-area-inset-bottom));
-        box-shadow: 0 -6px 20px rgba(0,0,0,0.18);
-      }
-
-      .generate-btn { padding: 13px; font-size: 14px; }
-
-      /* Banner compact on mobile */
-      .api-banner { padding: 10px 16px; font-size: 12px; }
-
-      /* Right panel */
-      .right-panel {
-        min-height: 50vh;
-        overflow-y: visible;
-      }
-
-      .results-header {
-        padding: 12px 16px;
-        position: relative; /* remove sticky on mobile */
-      }
-
-      .tweets-grid { padding: 12px 16px; gap: 10px; }
-
-      /* Tweet cards */
-      .tweet-card { padding: 14px 14px; }
-
-      .tweet-text { font-size: 14px; }
-
-      .tweet-actions { gap: 5px; }
-
-      .copy-btn { padding: 6px 10px; font-size: 11px; }
-
-      /* Empty state */
-      .empty-state { padding: 32px 20px; }
-      .empty-state h2 { font-size: 17px; }
-      .empty-state p { font-size: 13px; }
-      .empty-icon { width: 52px; height: 52px; font-size: 24px; }
-
-      /* Error banner */
-      .error-banner { margin: 14px 16px; }
-
-      /* Modal */
-      .modal { padding: 20px; width: calc(100vw - 32px); }
-
-      /* Loading skeletons */
-      .loading-state { padding: 16px; }
-    }
-
-    @media (max-width: 400px) {
-      .tone-grid { grid-template-columns: 1fr 1fr; }
-      .header h1 { font-size: 13px; }
-    }
-
-    /* ─── History Panel ─── */
+    /* ─── History Drawer (kept for backward compat) ─── */
     .history-overlay {
       display: none;
       position: fixed;
@@ -1125,11 +999,7 @@
       flex-shrink: 0;
     }
 
-    .history-header h3 {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--text);
-    }
+    .history-header h3 { font-size: 15px; font-weight: 600; color: var(--text); }
 
     .history-close {
       background: var(--surface-2);
@@ -1166,17 +1036,8 @@
     }
 
     .history-empty-icon { font-size: 36px; }
-
-    .history-empty h4 {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--text);
-    }
-
-    .history-empty p {
-      font-size: 13px;
-      color: var(--text-muted);
-    }
+    .history-empty h4 { font-size: 15px; font-weight: 600; color: var(--text); }
+    .history-empty p { font-size: 13px; color: var(--text-muted); }
 
     .history-entry {
       background: var(--surface-2);
@@ -1187,10 +1048,7 @@
       transition: all 0.15s;
     }
 
-    .history-entry:hover {
-      border-color: var(--accent);
-      background: var(--accent-dim);
-    }
+    .history-entry:hover { border-color: var(--accent); background: var(--accent-dim); }
 
     .history-entry-top {
       display: flex;
@@ -1199,37 +1057,12 @@
       margin-bottom: 5px;
     }
 
-    .history-tone {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-muted);
-    }
+    .history-tone { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+    .history-date { font-size: 11px; color: var(--text-dim); }
+    .history-snippet { font-size: 12px; color: var(--text-muted); line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .history-count { font-size: 11px; color: var(--text-dim); margin-top: 5px; }
 
-    .history-date {
-      font-size: 11px;
-      color: var(--text-dim);
-    }
-
-    .history-snippet {
-      font-size: 12px;
-      color: var(--text-muted);
-      line-height: 1.5;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .history-count {
-      font-size: 11px;
-      color: var(--text-dim);
-      margin-top: 5px;
-    }
-
-    .history-footer {
-      padding: 12px;
-      border-top: 1px solid var(--border);
-      flex-shrink: 0;
-    }
+    .history-footer { padding: 12px; border-top: 1px solid var(--border); flex-shrink: 0; }
 
     .history-clear-btn {
       width: 100%;
@@ -1244,9 +1077,336 @@
       transition: all 0.15s;
     }
 
-    .history-clear-btn:hover {
-      border-color: #f4533e;
-      color: #f4533e;
+    .history-clear-btn:hover { border-color: #f4533e; color: #f4533e; }
+
+    /* ─── Analytics Page ─── */
+    .analytics-container {
+      padding: 28px;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .analytics-page-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .analytics-page-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 14px;
+    }
+
+    .gcol-3 { grid-column: span 3; }
+    .gcol-4 { grid-column: span 4; }
+    .gcol-6 { grid-column: span 6; }
+    .gcol-8 { grid-column: span 8; }
+    .gcol-9 { grid-column: span 9; }
+    .gcol-12 { grid-column: span 12; }
+
+    .stat-widget {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .stat-widget-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-dim);
+    }
+
+    .stat-widget-value {
+      font-size: 34px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .stat-widget-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .chart-widget {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chart-widget-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-dim);
+      margin-bottom: 18px;
+    }
+
+    .chart-wrap {
+      flex: 1;
+      position: relative;
+      min-height: 190px;
+    }
+
+    .source-split-block {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+      justify-content: center;
+    }
+
+    .source-split-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .source-split-row strong { color: var(--text); }
+
+    .source-split-bar {
+      height: 6px;
+      background: var(--surface-3);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .source-split-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 3px;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ─── History Full Page ─── */
+    .history-page-container {
+      padding: 28px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .history-page-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .history-page-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .history-page-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .history-clear-page-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 13px;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .history-clear-page-btn:hover { border-color: #f4533e; color: #f4533e; }
+
+    .history-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 12px;
+    }
+
+    .history-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .history-card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+
+    .history-card-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .history-card-tone {
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--accent-dim);
+      color: var(--accent);
+      border-radius: var(--radius-xs);
+      padding: 3px 8px;
+    }
+
+    .history-card-source {
+      font-size: 11px;
+      color: var(--text-dim);
+      background: var(--surface-2);
+      border-radius: var(--radius-xs);
+      padding: 3px 8px;
+    }
+
+    .history-card-date {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-left: auto;
+    }
+
+    .history-card-snippet {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      font-style: italic;
+    }
+
+    .history-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+
+    .history-card-count { font-size: 12px; color: var(--text-muted); }
+
+    .history-card-restore {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .history-card:hover .history-card-restore { opacity: 1; }
+
+    .history-page-empty {
+      text-align: center;
+      padding: 80px 24px;
+      color: var(--text-muted);
+    }
+
+    .history-page-empty .empty-icon-lg { font-size: 48px; margin-bottom: 16px; }
+
+    .history-page-empty h3 {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    /* ─── Mobile ─── */
+    @media (max-width: 768px) {
+      .app { grid-template-columns: 1fr; grid-template-rows: auto auto auto; }
+
+      .header { padding: 10px 14px; gap: 8px; }
+      .header-subtitle { display: none; }
+      .header-icon { width: 28px; height: 28px; font-size: 14px; }
+      .header h1 { font-size: 14px; }
+      .header-right { gap: 6px; }
+      .theme-btn { width: 44px; height: 44px; font-size: 18px; }
+      .api-status { padding: 5px 8px; border-radius: 16px; }
+      #apiStatusText { display: none; }
+      .status-dot { width: 7px; height: 7px; }
+      .nav-tab { padding: 6px 12px; font-size: 12px; }
+
+      .left-panel { border-right: none; border-bottom: 1px solid var(--border); overflow-y: visible; }
+      .panel-section { padding: 14px 16px; }
+      textarea { min-height: 130px; font-size: 14px; }
+      .tone-grid { grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+      .tone-btn { padding: 8px 6px; }
+      .tone-name { font-size: 11px; }
+      .tone-desc { display: none; }
+      .count-value { font-size: 18px; }
+      .generate-panel-section {
+        position: sticky; bottom: 0; z-index: 30;
+        background: var(--surface);
+        border-top: 1px solid var(--border) !important;
+        border-bottom: none !important;
+        padding-bottom: calc(14px + env(safe-area-inset-bottom));
+        box-shadow: 0 -6px 20px rgba(0,0,0,0.18);
+      }
+      .generate-btn { padding: 13px; font-size: 14px; }
+      .api-banner { padding: 10px 16px; font-size: 12px; }
+      .right-panel { min-height: 50vh; overflow-y: visible; }
+      .results-header { padding: 12px 16px; position: relative; }
+      .tweets-grid { padding: 12px 16px; gap: 10px; }
+      .tweet-card { padding: 14px 14px; }
+      .tweet-text { font-size: 14px; }
+      .tweet-actions { gap: 5px; }
+      .copy-btn { padding: 6px 10px; font-size: 11px; }
+      .empty-state { padding: 32px 20px; }
+      .empty-state h2 { font-size: 17px; }
+      .empty-state p { font-size: 13px; }
+      .empty-icon { width: 52px; height: 52px; font-size: 24px; }
+      .error-banner { margin: 14px 16px; }
+      .modal { padding: 20px; width: calc(100vw - 32px); }
+      .loading-state { padding: 16px; }
+
+      .analytics-container { padding: 16px; gap: 12px; }
+      .analytics-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .gcol-3, .gcol-4 { grid-column: span 1; }
+      .gcol-6, .gcol-8, .gcol-9, .gcol-12 { grid-column: span 2; }
+      .history-page-container { padding: 16px; }
+      .history-cards-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 520px) {
+      .analytics-grid { grid-template-columns: 1fr; }
+      .gcol-3, .gcol-4, .gcol-6, .gcol-8, .gcol-9, .gcol-12 { grid-column: span 1; }
+    }
+
+    @media (max-width: 400px) {
+      .tone-grid { grid-template-columns: 1fr 1fr; }
+      .header h1 { font-size: 13px; }
     }
   </style>
 </head>
@@ -1263,8 +1423,14 @@
         <div class="header-subtitle">Turn blog articles into posts worth sharing</div>
       </div>
     </div>
+
+    <nav class="nav-tabs">
+      <button class="nav-tab active" data-page="generate" onclick="switchPage('generate')">Generate</button>
+      <button class="nav-tab" data-page="analytics" onclick="switchPage('analytics')">Analytics</button>
+      <button class="nav-tab" data-page="history" onclick="switchPage('history')">History</button>
+    </nav>
+
     <div class="header-right">
-      <button class="theme-btn" id="historyBtn" onclick="openHistoryPanel()" title="View history">🕐</button>
       <button class="theme-btn" id="themeBtn" title="Toggle light/dark mode">🌙</button>
       <button class="api-status" onclick="openModal()" id="apiStatusBtn">
         <span class="status-dot inactive" id="statusDot"></span>
@@ -1273,16 +1439,14 @@
     </div>
   </header>
 
-  <!-- ─── Left Panel ─── -->
-  <aside class="left-panel">
+  <!-- ─── Generate Page ─── -->
+  <aside class="left-panel" id="generateLeft">
 
-    <!-- API Key Banner (shown when no key is set) -->
     <div class="api-banner" id="apiBanner">
       <span>👋 You'll need a Claude API key to generate posts.</span>
       <button class="api-banner-cta" onclick="openModal()">Add key</button>
     </div>
 
-    <!-- Article Input -->
     <div class="panel-section">
       <div class="section-label">Blog Article</div>
 
@@ -1307,7 +1471,6 @@
       </div>
     </div>
 
-    <!-- Tone -->
     <div class="panel-section">
       <div class="section-label">Tone</div>
       <div class="tone-grid">
@@ -1338,7 +1501,6 @@
       </div>
     </div>
 
-    <!-- Count -->
     <div class="panel-section">
       <div class="section-label">Number of posts</div>
       <div class="count-row">
@@ -1349,7 +1511,6 @@
       <div class="range-labels"><span>3</span><span>10</span></div>
     </div>
 
-    <!-- Options -->
     <div class="panel-section">
       <div class="section-label">Options</div>
       <div class="option-row">
@@ -1384,7 +1545,6 @@
       </div>
     </div>
 
-    <!-- Generate Button -->
     <div class="panel-section generate-panel-section">
       <button class="generate-btn" id="generateBtn" onclick="generateTweets()">
         <div class="spinner" id="spinner"></div>
@@ -1394,10 +1554,7 @@
 
   </aside>
 
-  <!-- ─── Right Panel ─── -->
   <main class="right-panel" id="rightPanel">
-
-    <!-- Empty State -->
     <div class="empty-state" id="emptyState">
       <div class="empty-icon">✦</div>
       <h2>Ready when you are</h2>
@@ -1417,12 +1574,99 @@
         </div>
       </div>
     </div>
-
   </main>
+
+  <!-- ─── Analytics Page ─── -->
+  <div id="page-analytics">
+    <div class="analytics-container">
+
+      <div>
+        <div class="analytics-page-title">Analytics</div>
+        <div class="analytics-page-sub">Based on your local generation history</div>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="analytics-grid">
+        <div class="stat-widget gcol-3">
+          <div class="stat-widget-label">Total generations</div>
+          <div class="stat-widget-value" id="stat-generations">—</div>
+          <div class="stat-widget-sub">all time</div>
+        </div>
+        <div class="stat-widget gcol-3">
+          <div class="stat-widget-label">Posts created</div>
+          <div class="stat-widget-value" id="stat-posts">—</div>
+          <div class="stat-widget-sub">all time</div>
+        </div>
+        <div class="stat-widget gcol-3">
+          <div class="stat-widget-label">Posts copied</div>
+          <div class="stat-widget-value" id="stat-copies">—</div>
+          <div class="stat-widget-sub">all time</div>
+        </div>
+        <div class="stat-widget gcol-3">
+          <div class="stat-widget-label">Top tone</div>
+          <div class="stat-widget-value" style="font-size:22px;padding-top:6px" id="stat-tone">—</div>
+          <div class="stat-widget-sub" id="stat-tone-sub">most used</div>
+        </div>
+      </div>
+
+      <!-- Row 1: Generations bar (8) + Tone donut (4) -->
+      <div class="analytics-grid">
+        <div class="chart-widget gcol-8">
+          <div class="chart-widget-title">Generations by date — last 14 days</div>
+          <div class="chart-wrap"><canvas id="chart-generations"></canvas></div>
+        </div>
+        <div class="chart-widget gcol-4">
+          <div class="chart-widget-title">Tone distribution</div>
+          <div class="chart-wrap"><canvas id="chart-tones"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Row 2: Copies bar (6) + Cumulative line (6) -->
+      <div class="analytics-grid">
+        <div class="chart-widget gcol-6">
+          <div class="chart-widget-title">Posts copied by date — last 14 days</div>
+          <div class="chart-wrap"><canvas id="chart-copies"></canvas></div>
+        </div>
+        <div class="chart-widget gcol-6">
+          <div class="chart-widget-title">Overall posts generated — last 30 days</div>
+          <div class="chart-wrap"><canvas id="chart-overall"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Row 3: Stacked bar (9) + Source split summary (3) -->
+      <div class="analytics-grid">
+        <div class="chart-widget gcol-9">
+          <div class="chart-widget-title">Text vs URL — source breakdown by date</div>
+          <div class="chart-wrap"><canvas id="chart-sources"></canvas></div>
+        </div>
+        <div class="chart-widget gcol-3">
+          <div class="chart-widget-title">Source split</div>
+          <div class="source-split-block" id="source-split-block">
+            <div style="color:var(--text-dim);font-size:13px">No data yet</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ─── History Full Page ─── -->
+  <div id="page-history">
+    <div class="history-page-container">
+      <div class="history-page-header">
+        <div>
+          <div class="history-page-title">History</div>
+          <div class="history-page-sub">Click any card to restore those posts in the Generate tab</div>
+        </div>
+        <button class="history-clear-page-btn" onclick="clearHistory()">Clear all</button>
+      </div>
+      <div class="history-cards-grid" id="historyPageGrid"></div>
+    </div>
+  </div>
 
 </div>
 
-<!-- ─── History Panel ─── -->
+<!-- ─── History Drawer (legacy) ─── -->
 <div class="history-overlay" id="historyOverlay" onclick="closeHistoryOnBackdrop(event)">
   <div class="history-panel">
     <div class="history-header">
@@ -1453,13 +1697,43 @@
 </div>
 
 <script>
-  // ─── State ───────────────────────────────────────────────────────────────
+  // ─── State ────────────────────────────────────────────────────────────────
   let apiKey = localStorage.getItem('tweet_gen_api_key') || '';
   let selectedTone = 'insightful';
   let currentResults = [];
   let isLight = localStorage.getItem('tweet_gen_theme') === 'light';
   let articleMode = 'text';
   let scrapedText = '';
+
+  // ─── Constants ────────────────────────────────────────────────────────────
+  const TONE_LABELS = {
+    insightful: '💡 Insightful', casual: '😊 Casual', punchy: '⚡ Punchy',
+    storytelling: '📖 Story', educational: '🎓 Educational', contrarian: '🔥 Hot take'
+  };
+
+  const TONE_COLORS = {
+    insightful: '#1d9bf0', casual: '#00ba7c', punchy: '#f4533e',
+    storytelling: '#a855f7', educational: '#f4a419', contrarian: '#e85b4c'
+  };
+
+  // ─── Page Navigation ──────────────────────────────────────────────────────
+  function switchPage(name) {
+    document.querySelectorAll('.nav-tab').forEach(t => {
+      t.classList.toggle('active', t.dataset.page === name);
+    });
+
+    const isGen = name === 'generate';
+    const isAn  = name === 'analytics';
+    const isHist = name === 'history';
+
+    document.getElementById('generateLeft').style.display = isGen ? '' : 'none';
+    document.getElementById('rightPanel').style.display   = isGen ? '' : 'none';
+    document.getElementById('page-analytics').style.display = isAn  ? 'block' : 'none';
+    document.getElementById('page-history').style.display   = isHist ? 'block' : 'none';
+
+    if (isAn)   setTimeout(renderAnalytics, 0);
+    if (isHist) renderHistoryPage();
+  }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
   function escapeHtml(text) {
@@ -1472,7 +1746,7 @@
     document.querySelectorAll('.input-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('textMode').style.display = mode === 'text' ? '' : 'none';
-    document.getElementById('urlMode').style.display = mode === 'url' ? '' : 'none';
+    document.getElementById('urlMode').style.display  = mode === 'url'  ? '' : 'none';
     if (mode === 'text') scrapedText = '';
   }
 
@@ -1534,7 +1808,6 @@
   function applyTheme() {
     const root = document.documentElement;
     const vars = isLight ? LIGHT_VARS : DARK_VARS;
-    // Set variables directly so Android Chrome can't override them
     Object.entries(vars).forEach(([k, v]) => root.style.setProperty(k, v));
     if (isLight) {
       root.classList.add('light');
@@ -1546,6 +1819,10 @@
       root.style.colorScheme = 'dark';
       document.getElementById('themeBtn').textContent = '🌙';
       document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0f0f0f');
+    }
+    // Re-render analytics if visible
+    if (document.getElementById('page-analytics').style.display !== 'none') {
+      setTimeout(renderAnalytics, 0);
     }
   }
 
@@ -1566,7 +1843,6 @@
     if (apiKey) updateApiStatus(true);
     document.getElementById('apiKeyInput').value = apiKey;
 
-    // Wire theme button with both click and touchend for reliable mobile support
     const themeBtn = document.getElementById('themeBtn');
     let themeTouchFired = false;
     themeBtn.addEventListener('touchend', (e) => {
@@ -1605,7 +1881,7 @@
   }
 
   function updateApiStatus(active) {
-    const dot = document.getElementById('statusDot');
+    const dot  = document.getElementById('statusDot');
     const text = document.getElementById('apiStatusText');
     if (active) {
       dot.classList.remove('inactive');
@@ -1632,9 +1908,9 @@
   async function generateTweets() {
     const article = articleMode === 'url' ? scrapedText : document.getElementById('articleInput').value.trim();
     const count = document.getElementById('countSlider').value;
-    const useEmoji = document.getElementById('optEmoji').checked;
+    const useEmoji    = document.getElementById('optEmoji').checked;
     const useHashtags = document.getElementById('optHashtags').checked;
-    const useCTA = document.getElementById('optCTA').checked;
+    const useCTA      = document.getElementById('optCTA').checked;
 
     if (!apiKey) { openModal(); return; }
     if (articleMode === 'url' && !scrapedText) {
@@ -1653,25 +1929,17 @@
     setLoading(true, parseInt(count));
 
     const toneDescriptions = {
-      insightful: 'thoughtful, informative, and offers genuine insight — like a smart professional sharing what they learned',
-      casual: 'friendly, conversational, and approachable — like a friend texting you something interesting',
-      punchy: 'bold, short, and attention-grabbing — like a strong hook that stops you from scrolling',
+      insightful:   'thoughtful, informative, and offers genuine insight — like a smart professional sharing what they learned',
+      casual:       'friendly, conversational, and approachable — like a friend texting you something interesting',
+      punchy:       'bold, short, and attention-grabbing — like a strong hook that stops you from scrolling',
       storytelling: 'narrative and engaging — draws the reader in with a mini-story or personal angle',
-      educational: 'clear, structured, and instructive — like explaining something valuable step by step',
-      contrarian: 'a bold or slightly provocative opinion that challenges assumptions and sparks debate'
+      educational:  'clear, structured, and instructive — like explaining something valuable step by step',
+      contrarian:   'a bold or slightly provocative opinion that challenges assumptions and sparks debate'
     };
 
-    const emojiInstruction = useEmoji
-      ? 'Use 1–2 relevant emojis naturally within the text.'
-      : 'Do NOT use any emojis.';
-
-    const hashtagInstruction = useHashtags
-      ? 'Add 1–2 relevant hashtags at the end.'
-      : 'Do NOT add any hashtags.';
-
-    const ctaInstruction = useCTA
-      ? 'End with a short, natural call to action (e.g. "Read the full article", "Drop your thoughts below", etc.).'
-      : 'Do NOT include a call to action.';
+    const emojiInstruction    = useEmoji    ? 'Use 1–2 relevant emojis naturally within the text.' : 'Do NOT use any emojis.';
+    const hashtagInstruction  = useHashtags ? 'Add 1–2 relevant hashtags at the end.'              : 'Do NOT add any hashtags.';
+    const ctaInstruction      = useCTA      ? 'End with a short, natural call to action (e.g. "Read the full article", "Drop your thoughts below", etc.).' : 'Do NOT include a call to action.';
 
     const prompt = `You are an expert social media copywriter. Your job is to turn a blog article into compelling Twitter/X posts.
 
@@ -1726,7 +1994,7 @@ ${article.substring(0, 8000)}`;
 
       currentResults = tweets;
       showResults(tweets);
-      saveToHistory(tweets, selectedTone, article);
+      saveToHistory(tweets, selectedTone, article, articleMode);
 
     } catch (err) {
       showError(err.message);
@@ -1738,19 +2006,11 @@ ${article.substring(0, 8000)}`;
   // ─── Render Results ───────────────────────────────────────────────────────
   function showResults(tweets) {
     const panel = document.getElementById('rightPanel');
-    const toneLabels = {
-      insightful: '💡 Insightful',
-      casual: '😊 Casual',
-      punchy: '⚡ Punchy',
-      storytelling: '📖 Story',
-      educational: '🎓 Educational',
-      contrarian: '🔥 Hot take'
-    };
 
     panel.innerHTML = `
       <div class="results-header">
         <div class="results-meta">
-          <strong>${tweets.length} posts</strong> generated &nbsp;·&nbsp; ${toneLabels[selectedTone]} tone
+          <strong>${tweets.length} posts</strong> generated &nbsp;·&nbsp; ${TONE_LABELS[selectedTone]} tone
         </div>
         <div class="results-actions">
           <button class="btn-sm" id="copyAllBtn" onclick="copyAllTweets(this)">📋 Copy all</button>
@@ -1762,7 +2022,6 @@ ${article.substring(0, 8000)}`;
       </div>
     `;
 
-    // On mobile, scroll results into view automatically
     if (window.innerWidth <= 768) {
       setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
     }
@@ -1803,7 +2062,7 @@ ${article.substring(0, 8000)}`;
     const pct = Math.min((len / 280) * 100, 100);
     const overClass = len > 280 ? 'over' : len > 240 ? 'warning' : '';
     const countEl = document.getElementById(id + '-count');
-    const barEl = document.getElementById(id + '-bar');
+    const barEl   = document.getElementById(id + '-bar');
     if (countEl) {
       countEl.className = `char-count ${overClass}`;
       countEl.textContent = `${len} / 280 chars${len > 280 ? ' ⚠ over limit' : ''}`;
@@ -1817,6 +2076,7 @@ ${article.substring(0, 8000)}`;
   async function copyTweet(id, btn) {
     const text = document.getElementById(id).innerText.replace(/\n$/, '');
     await navigator.clipboard.writeText(text);
+    trackCopy(1);
     btn.classList.add('copied');
     btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
     setTimeout(() => {
@@ -1831,6 +2091,7 @@ ${article.substring(0, 8000)}`;
       .map(el => el.innerText.replace(/\n$/, '').trim())
       .filter(Boolean);
     await navigator.clipboard.writeText(texts.join('\n\n---\n\n'));
+    trackCopy(texts.length);
     const orig = btn.textContent;
     btn.textContent = '✓ All copied!';
     btn.style.color = 'var(--success)';
@@ -1844,9 +2105,9 @@ ${article.substring(0, 8000)}`;
 
   // ─── Loading State ────────────────────────────────────────────────────────
   function setLoading(on, count = 5) {
-    const btn = document.getElementById('generateBtn');
+    const btn     = document.getElementById('generateBtn');
     const spinner = document.getElementById('spinner');
-    const text = document.getElementById('generateBtnText');
+    const text    = document.getElementById('generateBtnText');
 
     if (on) {
       btn.disabled = true;
@@ -1868,16 +2129,42 @@ ${article.substring(0, 8000)}`;
     }
   }
 
-  // ─── History ──────────────────────────────────────────────────────────────
-  const HISTORY_KEY = 'post_gen_history';
-  const MAX_HISTORY = 50;
+  // ─── Error State ──────────────────────────────────────────────────────────
+  function showError(msg) {
+    const panel = document.getElementById('rightPanel');
+    panel.innerHTML = `
+      <div class="error-banner">
+        <span>⚠</span>
+        <div><strong>Couldn't generate posts</strong><br/>${msg}</div>
+      </div>
+      <div class="empty-state" style="flex:1">
+        <div class="empty-icon">🔄</div>
+        <h2>Try again</h2>
+        <p>Fix the issue above and try again.</p>
+      </div>`;
+  }
 
-  function saveToHistory(posts, tone, articleSnippet) {
+  // ─── Copy Tracking ────────────────────────────────────────────────────────
+  const COPY_EVENTS_KEY = 'post_gen_copy_events';
+
+  function trackCopy(count = 1) {
+    const today = new Date().toISOString().split('T')[0];
+    const events = JSON.parse(localStorage.getItem(COPY_EVENTS_KEY) || '{}');
+    events[today] = (events[today] || 0) + count;
+    localStorage.setItem(COPY_EVENTS_KEY, JSON.stringify(events));
+  }
+
+  // ─── History (Data) ───────────────────────────────────────────────────────
+  const HISTORY_KEY = 'post_gen_history';
+  const MAX_HISTORY = 100;
+
+  function saveToHistory(posts, tone, articleSnippet, source) {
     const history = loadHistory();
     history.unshift({
       id: Date.now(),
       date: new Date().toISOString(),
       tone,
+      source: source || 'text',
       articleSnippet: articleSnippet.replace(/\s+/g, ' ').trim().substring(0, 120),
       posts
     });
@@ -1890,6 +2177,26 @@ ${article.substring(0, 8000)}`;
     catch { return []; }
   }
 
+  function clearHistory() {
+    if (!confirm('Clear all history? This can\'t be undone.')) return;
+    localStorage.removeItem(HISTORY_KEY);
+    renderHistoryList();
+    renderHistoryPage();
+  }
+
+  function restoreFromHistory(id) {
+    const entry = loadHistory().find(e => e.id === id);
+    if (!entry) return;
+    selectedTone = entry.tone;
+    document.querySelectorAll('.tone-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.tone === entry.tone);
+    });
+    currentResults = entry.posts;
+    showResults(entry.posts);
+    switchPage('generate');
+  }
+
+  // ─── History Drawer (kept for backward compat) ────────────────────────────
   function openHistoryPanel() {
     renderHistoryList();
     document.getElementById('historyOverlay').classList.add('open');
@@ -1906,10 +2213,6 @@ ${article.substring(0, 8000)}`;
   function renderHistoryList() {
     const history = loadHistory();
     const list = document.getElementById('historyList');
-    const toneLabels = {
-      insightful: '💡 Insightful', casual: '😊 Casual', punchy: '⚡ Punchy',
-      storytelling: '📖 Story', educational: '🎓 Educational', contrarian: '🔥 Hot take'
-    };
 
     if (history.length === 0) {
       list.innerHTML = `
@@ -1928,7 +2231,7 @@ ${article.substring(0, 8000)}`;
       return `
         <div class="history-entry" onclick="restoreFromHistory(${entry.id})">
           <div class="history-entry-top">
-            <span class="history-tone">${toneLabels[entry.tone] || entry.tone}</span>
+            <span class="history-tone">${TONE_LABELS[entry.tone] || entry.tone}</span>
             <span class="history-date">${dateStr} · ${timeStr}</span>
           </div>
           <div class="history-snippet">${escapeHtml(entry.articleSnippet)}…</div>
@@ -1937,41 +2240,262 @@ ${article.substring(0, 8000)}`;
     }).join('');
   }
 
-  function restoreFromHistory(id) {
-    const entry = loadHistory().find(e => e.id === id);
-    if (!entry) return;
-    selectedTone = entry.tone;
-    document.querySelectorAll('.tone-btn').forEach(b => {
-      b.classList.toggle('active', b.dataset.tone === entry.tone);
+  // ─── History Full Page ────────────────────────────────────────────────────
+  function renderHistoryPage() {
+    const history = loadHistory();
+    const grid = document.getElementById('historyPageGrid');
+
+    if (history.length === 0) {
+      grid.innerHTML = `
+        <div class="history-page-empty">
+          <div class="empty-icon-lg">🕐</div>
+          <h3>No history yet</h3>
+          <p>Your generated posts will appear here automatically after each generation.</p>
+        </div>`;
+      return;
+    }
+
+    grid.innerHTML = history.map(entry => {
+      const d = new Date(entry.date);
+      const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      const source = entry.source || 'text';
+
+      return `
+        <div class="history-card" onclick="restoreFromHistory(${entry.id})">
+          <div class="history-card-meta">
+            <span class="history-card-tone">${TONE_LABELS[entry.tone] || entry.tone}</span>
+            <span class="history-card-source">${source === 'url' ? '🔗 URL' : '📝 Text'}</span>
+            <span class="history-card-date">${dateStr} · ${timeStr}</span>
+          </div>
+          <div class="history-card-snippet">"${escapeHtml(entry.articleSnippet)}…"</div>
+          <div class="history-card-footer">
+            <span class="history-card-count">${(entry.posts || []).length} posts generated</span>
+            <span class="history-card-restore">Restore →</span>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ─── Analytics Data ───────────────────────────────────────────────────────
+  function getDays(n) {
+    return Array.from({ length: n }, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - (n - 1 - i));
+      return d.toISOString().split('T')[0];
     });
-    currentResults = entry.posts;
-    showResults(entry.posts);
-    closeHistoryPanel();
   }
 
-  function clearHistory() {
-    if (!confirm('Clear all history? This can\'t be undone.')) return;
-    localStorage.removeItem(HISTORY_KEY);
-    renderHistoryList();
+  function getAnalyticsData() {
+    const history    = loadHistory();
+    const copyEvents = JSON.parse(localStorage.getItem(COPY_EVENTS_KEY) || '{}');
+    const days14     = getDays(14);
+    const days30     = getDays(30);
+
+    const genByDate  = Object.fromEntries(days14.map(d => [d, 0]));
+    const textByDate = Object.fromEntries(days14.map(d => [d, 0]));
+    const urlByDate  = Object.fromEntries(days14.map(d => [d, 0]));
+    const postsByDate30 = Object.fromEntries(days30.map(d => [d, 0]));
+    const toneCounts = {};
+    let totalText = 0, totalUrl = 0;
+
+    history.forEach(entry => {
+      const date = entry.date.split('T')[0];
+      const src  = entry.source || 'text';
+      const pc   = (entry.posts || []).length;
+
+      if (date in genByDate) {
+        genByDate[date]++;
+        if (src === 'url') urlByDate[date]++; else textByDate[date]++;
+      }
+      if (date in postsByDate30) postsByDate30[date] += pc;
+
+      toneCounts[entry.tone] = (toneCounts[entry.tone] || 0) + 1;
+      if (src === 'url') totalUrl++; else totalText++;
+    });
+
+    let cum = 0;
+    const cumulativePosts = days30.map(d => { cum += postsByDate30[d]; return cum; });
+
+    const totalGenerations = history.length;
+    const totalPosts = history.reduce((s, e) => s + (e.posts || []).length, 0);
+    const topToneEntry = Object.entries(toneCounts).sort((a, b) => b[1] - a[1])[0];
+    const totalCopies  = Object.values(copyEvents).reduce((s, v) => s + v, 0);
+
+    return {
+      days14, days30,
+      generationsByDate: days14.map(d => genByDate[d]),
+      textByDate:  days14.map(d => textByDate[d]),
+      urlByDate:   days14.map(d => urlByDate[d]),
+      copyByDate:  days14.map(d => copyEvents[d] || 0),
+      cumulativePosts,
+      toneCounts,
+      totalText, totalUrl,
+      stats: { totalGenerations, totalPosts, topToneEntry, totalCopies }
+    };
   }
 
-  // ─── Error State ──────────────────────────────────────────────────────────
-  function showError(msg) {
-    const panel = document.getElementById('rightPanel');
-    panel.innerHTML = `
-      <div class="error-banner">
-        <span>⚠</span>
-        <div><strong>Couldn't generate posts</strong><br/>${msg}</div>
+  function fmtDate(s) {
+    return new Date(s + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  // ─── Analytics Rendering ─────────────────────────────────────────────────
+  let chartInstances = {};
+
+  function renderAnalytics() {
+    const data = getAnalyticsData();
+
+    // Stat cards
+    document.getElementById('stat-generations').textContent = data.stats.totalGenerations;
+    document.getElementById('stat-posts').textContent       = data.stats.totalPosts;
+    document.getElementById('stat-copies').textContent      = data.stats.totalCopies;
+    if (data.stats.topToneEntry) {
+      document.getElementById('stat-tone').textContent     = TONE_LABELS[data.stats.topToneEntry[0]] || '—';
+      document.getElementById('stat-tone-sub').textContent = `${data.stats.topToneEntry[1]}× used`;
+    } else {
+      document.getElementById('stat-tone').textContent = '—';
+    }
+
+    // Source split block
+    const total = data.stats.totalGenerations || 1;
+    const textPct = Math.round((data.totalText / total) * 100);
+    const urlPct  = 100 - textPct;
+    document.getElementById('source-split-block').innerHTML = `
+      <div class="source-split-row"><span>📝 Pasted text</span><strong>${textPct}%</strong></div>
+      <div class="source-split-bar"><div class="source-split-fill" style="width:${textPct}%"></div></div>
+      <div class="source-split-row"><span>🔗 From URL</span><strong>${urlPct}%</strong></div>
+      <div class="source-split-bar" style="margin-top:-2px">
+        <div class="source-split-fill" style="width:${urlPct}%;background:#f4a419"></div>
       </div>
-      <div class="empty-state" style="flex:1">
-        <div class="empty-icon">🔄</div>
-        <h2>Try again</h2>
-        <p>Fix the issue above and try again.</p>
-      </div>`;
+      <div style="font-size:11px;color:var(--text-dim);margin-top:4px">${data.totalText} text · ${data.totalUrl} URL</div>`;
+
+    // Destroy existing charts
+    Object.values(chartInstances).forEach(c => c.destroy());
+    chartInstances = {};
+
+    if (data.stats.totalGenerations === 0) return;
+
+    // Theme-aware colors
+    const cs = getComputedStyle(document.documentElement);
+    const textMuted = cs.getPropertyValue('--text-muted').trim() || '#888';
+    const textDim   = cs.getPropertyValue('--text-dim').trim()   || '#555';
+    const border    = cs.getPropertyValue('--border').trim()     || '#333';
+    const surface   = cs.getPropertyValue('--surface').trim()    || '#1a1a1a';
+
+    const tooltip = {
+      backgroundColor: surface,
+      titleColor: textMuted,
+      bodyColor: textMuted,
+      borderColor: border,
+      borderWidth: 1,
+      padding: 10,
+      cornerRadius: 8,
+    };
+
+    const axes = {
+      x: { ticks: { color: textDim, font: { size: 11, family: 'system-ui' }, maxRotation: 0 }, grid: { color: border }, border: { display: false } },
+      y: { ticks: { color: textDim, font: { size: 11, family: 'system-ui' } }, grid: { color: border }, border: { display: false }, beginAtZero: true }
+    };
+
+    const base = {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 400 },
+      plugins: { legend: { display: false }, tooltip },
+      scales: axes
+    };
+
+    const labels14 = data.days14.map(fmtDate);
+    const labels30 = data.days30.map(fmtDate);
+
+    // 1 — Generations by date (bar)
+    chartInstances.gen = new Chart(document.getElementById('chart-generations'), {
+      type: 'bar',
+      data: {
+        labels: labels14,
+        datasets: [{ label: 'Generations', data: data.generationsByDate,
+          backgroundColor: 'rgba(29,155,240,0.75)', borderColor: '#1d9bf0',
+          borderWidth: 0, borderRadius: 5, borderSkipped: false }]
+      },
+      options: { ...base }
+    });
+
+    // 2 — Tone donut
+    const toneKeys = Object.keys(data.toneCounts);
+    chartInstances.tones = new Chart(document.getElementById('chart-tones'), {
+      type: 'doughnut',
+      data: {
+        labels: toneKeys.map(k => TONE_LABELS[k] || k),
+        datasets: [{ data: toneKeys.map(k => data.toneCounts[k]),
+          backgroundColor: toneKeys.map(k => TONE_COLORS[k] || '#888'),
+          borderColor: surface, borderWidth: 3 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        animation: { duration: 400 }, cutout: '62%',
+        plugins: {
+          legend: { display: true, position: 'bottom',
+            labels: { color: textMuted, font: { size: 11 }, padding: 10, boxWidth: 10, boxHeight: 10 } },
+          tooltip
+        }
+      }
+    });
+
+    // 3 — Copies by date (bar)
+    chartInstances.copies = new Chart(document.getElementById('chart-copies'), {
+      type: 'bar',
+      data: {
+        labels: labels14,
+        datasets: [{ label: 'Copied', data: data.copyByDate,
+          backgroundColor: 'rgba(0,186,124,0.75)', borderColor: '#00ba7c',
+          borderWidth: 0, borderRadius: 5, borderSkipped: false }]
+      },
+      options: { ...base }
+    });
+
+    // 4 — Cumulative posts (line)
+    chartInstances.overall = new Chart(document.getElementById('chart-overall'), {
+      type: 'line',
+      data: {
+        labels: labels30,
+        datasets: [{ label: 'Total posts', data: data.cumulativePosts,
+          borderColor: '#a855f7', backgroundColor: 'rgba(168,85,247,0.1)',
+          borderWidth: 2, fill: true, tension: 0.4,
+          pointBackgroundColor: '#a855f7', pointRadius: 3, pointHoverRadius: 5 }]
+      },
+      options: { ...base }
+    });
+
+    // 5 — Text vs URL stacked bar
+    chartInstances.sources = new Chart(document.getElementById('chart-sources'), {
+      type: 'bar',
+      data: {
+        labels: labels14,
+        datasets: [
+          { label: '📝 Pasted text', data: data.textByDate, stack: 'src',
+            backgroundColor: 'rgba(29,155,240,0.75)', borderColor: '#1d9bf0',
+            borderWidth: 0, borderRadius: 0 },
+          { label: '🔗 From URL', data: data.urlByDate, stack: 'src',
+            backgroundColor: 'rgba(244,164,25,0.75)', borderColor: '#f4a419',
+            borderWidth: 0, borderRadius: 0 }
+        ]
+      },
+      options: {
+        ...base,
+        plugins: {
+          ...base.plugins,
+          legend: { display: true, position: 'top', align: 'end',
+            labels: { color: textMuted, font: { size: 11 }, padding: 12, boxWidth: 10, boxHeight: 10 } }
+        },
+        scales: {
+          x: { ...axes.x, stacked: true },
+          y: { ...axes.y, stacked: true }
+        }
+      }
+    });
   }
 </script>
 
-<!-- Auto-load saved API key into the status indicator on page load -->
 <script>
   if (apiKey) {
     document.getElementById('statusDot').classList.remove('inactive');
