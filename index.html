@@ -1347,16 +1347,31 @@
     @media (max-width: 768px) {
       .app { grid-template-columns: 1fr; grid-template-rows: auto auto auto; }
 
-      .header { padding: 10px 14px; gap: 8px; }
+      /* Header: brand + controls on top row, nav tabs on second row */
+      .header { padding: 10px 14px; gap: 8px; flex-wrap: wrap; }
+      .header-brand { order: 1; }
+      .header-right { order: 2; gap: 6px; }
+      .nav-tabs {
+        order: 3;
+        width: 100%;
+        border-radius: var(--radius-sm);
+        padding: 3px;
+      }
+      .nav-tab {
+        flex: 1;
+        text-align: center;
+        padding: 7px 8px;
+        font-size: 12px;
+        min-height: 34px;
+      }
+
       .header-subtitle { display: none; }
       .header-icon { width: 28px; height: 28px; font-size: 14px; }
       .header h1 { font-size: 14px; }
-      .header-right { gap: 6px; }
       .theme-btn { width: 44px; height: 44px; font-size: 18px; }
       .api-status { padding: 5px 8px; border-radius: 16px; }
       #apiStatusText { display: none; }
       .status-dot { width: 7px; height: 7px; }
-      .nav-tab { padding: 6px 12px; font-size: 12px; }
 
       .left-panel { border-right: none; border-bottom: 1px solid var(--border); overflow-y: visible; }
       .panel-section { padding: 14px 16px; }
@@ -1382,7 +1397,7 @@
       .tweet-card { padding: 14px 14px; }
       .tweet-text { font-size: 14px; }
       .tweet-actions { gap: 5px; }
-      .copy-btn { padding: 6px 10px; font-size: 11px; }
+      .copy-btn { padding: 10px 14px; font-size: 12px; min-height: 44px; }
       .empty-state { padding: 32px 20px; }
       .empty-state h2 { font-size: 17px; }
       .empty-state p { font-size: 13px; }
@@ -1391,11 +1406,12 @@
       .modal { padding: 20px; width: calc(100vw - 32px); }
       .loading-state { padding: 16px; }
 
-      .analytics-container { padding: 16px; gap: 12px; }
+      .analytics-container { padding: 16px; gap: 12px; padding-top: 20px; }
       .analytics-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
       .gcol-3, .gcol-4 { grid-column: span 1; }
       .gcol-6, .gcol-8, .gcol-9, .gcol-12 { grid-column: span 2; }
-      .history-page-container { padding: 16px; }
+      .chart-wrap { min-height: 200px; }
+      .history-page-container { padding: 16px; padding-top: 20px; }
       .history-cards-grid { grid-template-columns: 1fr; }
     }
 
